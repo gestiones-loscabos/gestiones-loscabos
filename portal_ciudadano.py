@@ -112,7 +112,21 @@ with st.form("form_ciudadano"):
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>2. Ubicación del Establecimiento</div></div>", unsafe_allow_html=True)
     
-    enlace_mapa = st.text_input("Enlace de Google Maps o Waze *")
+    # --- MINITUTORIAL PARA CELULARES ---
+    with st.expander("📲 ¿Cómo copiar y pegar mi ubicación desde el celular? (Toca aquí para ver instrucciones)"):
+        st.markdown("""
+        **Paso 1: Copiar el enlace**
+        * **En Google Maps:** Abre la app, busca tu local (o mantén presionado tu dedo sobre tu calle en el mapa hasta que salga un pin rojo). Toca el botón **Compartir** en la parte de abajo y selecciona **Copiar enlace**.
+        * **En Waze:** Abre la app, toca el punto de tu ubicación actual, dale a **Enviar ubicación** y luego a **Copiar enlace**.
+        
+        **Paso 2: Pegarlo en este portal**
+        * Regresa a esta pantalla, **mantén presionado tu dedo durante 2 segundos** dentro de la casilla de abajo y suelta.
+        * Te aparecerá un pequeño botón que dice **Pegar**. Tócalo y listo.
+        
+        *(Si tienes problemas con el mapa, simplemente escribe a mano el nombre de tu calle, entre qué calles está y tu colonia).*
+        """)
+    
+    enlace_mapa = st.text_input("Pega aquí el enlace de Google Maps o Waze (o escribe tu calle y colonia) *")
     telefono = st.text_input("Teléfono de Contacto (WhatsApp) *")
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>3. Requisitos y Carga de Documentos Digitales</div></div>", unsafe_allow_html=True)
@@ -139,7 +153,7 @@ with st.form("form_ciudadano"):
 
     if enviar_btn:
         if not contribuyente or not nombre_comercial or not direccion_escrita or not telefono or not enlace_mapa:
-            st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio, Teléfono y el enlace de Maps/Waze.")
+            st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio, Teléfono y la Ubicación.")
         else:
             nombres_archivos = []
             if archivo_ine: nombres_archivos.append(f"INE:{archivo_ine.name}")
@@ -151,7 +165,7 @@ with st.form("form_ciudadano"):
 
             detalle_compuesto = (
                 f"Fecha: {datetime.date.today().strftime('%d/%m/%Y')} | Tel: {telefono} | Dir: {direccion_escrita} | NomCom: {nombre_comercial} | "
-                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | LinkMapsWaze: {enlace_mapa} | "
+                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | LinkUbicacion: {enlace_mapa} | "
                 f"SolGiros:{c_sol_giros} INE:{c_ine} RFC:{c_rfc} Dom:{c_dom} Agua:{c_agua} Predial:{c_predial} Croquis:{c_croquis}"
                 f"{str_archivos}"
             )
