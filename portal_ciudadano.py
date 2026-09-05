@@ -4,7 +4,6 @@ import urllib.parse
 import os
 import datetime
 import re
-from PIL import Image
 
 # --- CONEXIÓN A LA BASE DE DATOS EN LA NUBE (NEON.TECH) ---
 DATABASE_URL = "postgresql://neondb_owner:npg_Y6RvW8yqBGjH@ep-lingering-thunder-ar76lrca-pooler.c-4.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
@@ -12,7 +11,6 @@ DATABASE_URL = "postgresql://neondb_owner:npg_Y6RvW8yqBGjH@ep-lingering-thunder-
 def obtener_conexion():
     return psycopg2.connect(DATABASE_URL, client_encoding='utf8')
 
-# Inicializar tabla si no existe (agregando columna para archivos si se requiere)
 try:
     con_init = obtener_conexion()
     cur_init = con_init.cursor()
@@ -98,7 +96,7 @@ with st.form("form_ciudadano"):
 
     c_com1, c_com2 = st.columns([2, 1])
     with c_com1:
-        nombre_comercial = st.text_input("Nombre Comercial del Establecimiento (Ej. Minisúper El Paraíso) *")
+        nombre_comercial = st.text_input("Nombre Comercial del Establecimiento *")
     with c_com2:
         tipo_establecimiento = st.selectbox("Característica:", ["Único", "Matriz", "Sucursal"])
 
@@ -114,42 +112,16 @@ with st.form("form_ciudadano"):
         
     cat_str = f"Mz: {manzana_cat} | Lt: {lote_cat} | Clave: {clave_catastral}"
 
-    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>2. Ubicación Automática del Establecimiento</div></div>", unsafe_allow_html=True)
+    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>2. Ubicación del Establecimiento</div></div>", unsafe_allow_html=True)
     
     st.markdown("""
         <div style="background-color: #eef2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
             <p style="margin: 0; font-size: 0.95rem; color: #0b2d54; font-weight: bold;">
-                📱 Opción en campo (Celular):
+                💡 Nota sobre la ubicación:
             </p>
             <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #555;">
-                Usa el botón para capturar tus coordenadas GPS actuales de forma automática:
+                Puedes pegar directamente tu enlace de Google Maps (compartir ubicación actual) o escribir las coordenadas latitud y longitud.
             </p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-        <div style="text-align: center; margin: 10px 0;">
-            <button type="button" onclick="
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        alert('¡Ubicación GPS capturada con éxito! Lat: ' + position.coords.latitude.toFixed(6) + ', Lon: ' + position.coords.longitude.toFixed(6));
-                        const inputLat = document.querySelector('input[aria-label*=\'Latitud\']');
-                        const inputLon = document.querySelector('input[aria-label*=\'Longitud\']');
-                        if(inputLat && inputLon) {
-                            inputLat.value = position.coords.latitude.toFixed(6);
-                            inputLon.value = position.coords.longitude.toFixed(6);
-                            inputLat.dispatchEvent(new Event('input', { bubbles: true }));
-                            inputLon.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    }, function(error) {
-                        alert('Error al obtener ubicación. Asegúrate de dar permisos de GPS.');
-                    });
-                } else {
-                    alert('Tu navegador no soporta geolocalización.');
-                }
-            " style="background-color: #0b2d54; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%;">
-                📍 Obtener Ubicación GPS Actual Automáticamente
-            </button>
         </div>
     """, unsafe_allow_html=True)
 
@@ -159,7 +131,7 @@ with st.form("form_ciudadano"):
     with c_lon:
         lon_input = st.text_input("Longitud:", value="")
 
-    enlace_mapa = st.text_input("Opcional: Enlace alternativo de Google Maps:")
+    enlace_mapa = st.text_input("Enlace de Google Maps (Ej: https://maps.app.goo.gl/... o pega coordenadas de Google Maps):")
     telefono = st.text_input("Teléfono de Contacto (WhatsApp) *")
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>3. Requisitos y Carga de Documentos Digitales</div></div>", unsafe_allow_html=True)
@@ -173,7 +145,6 @@ with st.form("form_ciudadano"):
     c_predial = st.checkbox("Recibo de Impuesto Predial Vigente")
     c_croquis = st.checkbox("Croquis de Localización")
 
-    # Campos para subir archivos directamente
     st.markdown("<p style='font-weight: bold; color: #0b2d54; margin-top: 15px;'>📁 Adjuntar Documentación Requerida:</p>", unsafe_allow_html=True)
     
     archivo_ine = st.file_uploader("Subir INE / Identificación Oficial (PDF o Imagen)", type=["pdf", "png", "jpg", "jpeg"])
@@ -191,7 +162,9 @@ with st.form("form_ciudadano"):
         else:
             lat_res, lon_res = lat_input, lon_input
             
-            if not lat_res and enlace_mapa:
+            # Extracción automática robusta por si pegan cualquier tipo de enlace o texto de Google Maps
+            texto_a_buscar = (enlace_mapa + " " + lat_input + " " + lon_input)
+            if enlace_mapa:
                 limpio = urllib.parse.unquote(enlace_mapa)
                 m1 = re.search(r"@([-\d.]+),([-\d.]+)", limpio)
                 m2 = re.search(r"ll=([-\d.]+),([-\d.]+)", limpio)
@@ -205,7 +178,6 @@ with st.form("form_ciudadano"):
                 elif m4: lat_res, lon_res = m4.group(1), m4.group(2)
                 elif m5: lat_res, lon_res = m5.group(1), m5.group(2)
 
-            # Verificar nombres de archivos adjuntos si los subieron
             nombres_archivos = []
             if archivo_ine: nombres_archivos.append(f"INE:{archivo_ine.name}")
             if archivo_rfc: nombres_archivos.append(f"RFC:{archivo_rfc.name}")
@@ -216,7 +188,7 @@ with st.form("form_ciudadano"):
 
             detalle_compuesto = (
                 f"Fecha: {datetime.date.today().strftime('%d/%m/%Y')} | Tel: {telefono} | Dir: {direccion_escrita} | NomCom: {nombre_comercial} | "
-                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | Lat: {lat_res} | Lon: {lon_res} | Link: {enlace_mapa} | "
+                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | Lat: {lat_res} | Lon: {lon_res} | LinkMaps: {enlace_mapa} | "
                 f"SolGiros:{c_sol_giros} INE:{c_ine} RFC:{c_rfc} Dom:{c_dom} Agua:{c_agua} Predial:{c_predial} Croquis:{c_croquis}"
                 f"{str_archivos}"
             )
