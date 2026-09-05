@@ -1,9 +1,7 @@
 import streamlit as st
 import psycopg2
-import urllib.parse
 import os
 import datetime
-import re
 
 # --- CONEXIÓN A LA BASE DE DATOS EN LA NUBE (NEON.TECH) ---
 DATABASE_URL = "postgresql://neondb_owner:npg_Y6RvW8yqBGjH@ep-lingering-thunder-ar76lrca-pooler.c-4.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
@@ -114,24 +112,7 @@ with st.form("form_ciudadano"):
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>2. Ubicación del Establecimiento</div></div>", unsafe_allow_html=True)
     
-    st.markdown("""
-        <div style="background-color: #eef2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
-            <p style="margin: 0; font-size: 0.95rem; color: #0b2d54; font-weight: bold;">
-                💡 Instrucción de Ubicación:
-            </p>
-            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #555;">
-                Escribe las coordenadas de tu ubicación (Ej. 23.05, -109.70) o pega el enlace largo de Google Maps del navegador.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    c_lat, c_lon = st.columns(2)
-    with c_lat:
-        lat_input = st.text_input("Latitud:", value="")
-    with c_lon:
-        lon_input = st.text_input("Longitud:", value="")
-
-    enlace_mapa = st.text_input("O pega aquí el enlace de Google Maps:")
+    enlace_mapa = st.text_input("Enlace de Google Maps o Waze *")
     telefono = st.text_input("Teléfono de Contacto (WhatsApp) *")
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>3. Requisitos y Carga de Documentos Digitales</div></div>", unsafe_allow_html=True)
@@ -157,25 +138,9 @@ with st.form("form_ciudadano"):
     enviar_btn = st.form_submit_button("🚀 Enviar Registro y Documentos a la Ventanilla", use_container_width=True)
 
     if enviar_btn:
-        if not contribuyente or not nombre_comercial or not direccion_escrita or not telefono:
-            st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio y Teléfono.")
+        if not contribuyente or not nombre_comercial or not direccion_escrita or not telefono or not enlace_mapa:
+            st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio, Teléfono y el enlace de Maps/Waze.")
         else:
-            lat_res, lon_res = lat_input, lon_input
-            
-            if enlace_mapa:
-                limpio = urllib.parse.unquote(enlace_mapa)
-                m1 = re.search(r"@([-\d.]+),([-\d.]+)", limpio)
-                m2 = re.search(r"ll=([-\d.]+),([-\d.]+)", limpio)
-                m3 = re.search(r"[?&]q=([-\d.]+)[,%](?:2C)?([-\d.]+)", limpio)
-                m4 = re.search(r"q=([-\d.]+),([-\d.]+)", limpio)
-                m5 = re.search(r"([-\d]{2,3}\.\d+)[,\s]+([-\d]{2,4}\.\d+)", limpio)
-                
-                if m1: lat_res, lon_res = m1.group(1), m1.group(2)
-                elif m2: lat_res, lon_res = m2.group(1), m2.group(2)
-                elif m3: lat_res, lon_res = m3.group(1), m3.group(2)
-                elif m4: lat_res, lon_res = m4.group(1), m4.group(2)
-                elif m5: lat_res, lon_res = m5.group(1), m5.group(2)
-
             nombres_archivos = []
             if archivo_ine: nombres_archivos.append(f"INE:{archivo_ine.name}")
             if archivo_rfc: nombres_archivos.append(f"RFC:{archivo_rfc.name}")
@@ -186,7 +151,7 @@ with st.form("form_ciudadano"):
 
             detalle_compuesto = (
                 f"Fecha: {datetime.date.today().strftime('%d/%m/%Y')} | Tel: {telefono} | Dir: {direccion_escrita} | NomCom: {nombre_comercial} | "
-                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | Lat: {lat_res} | Lon: {lon_res} | LinkMaps: {enlace_mapa} | "
+                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | LinkMapsWaze: {enlace_mapa} | "
                 f"SolGiros:{c_sol_giros} INE:{c_ine} RFC:{c_rfc} Dom:{c_dom} Agua:{c_agua} Predial:{c_predial} Croquis:{c_croquis}"
                 f"{str_archivos}"
             )
