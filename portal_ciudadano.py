@@ -77,13 +77,20 @@ with st.form("form_ciudadano"):
                 "04.- Cambio de Domicilio",
                 "05.- Cambio de Actividad / Giro Comercial",
                 "Refrendo de Licencia de Alcohol",
-                "Anexo de Bebidas Alcohólicas (Exclusivo Hotelería)"
+                "Anexo de Bebidas Alcohólicas (Exclusivo Hotelería)",
+                "Aviso de Actividad / Inactividad de Licencia",
+                "Gestiones Diversas (Especificar)"
             ]
         )
+        
+        detalle_gestion = ""
+        if tipo_tramite == "Gestiones Diversas (Especificar)":
+            detalle_gestion = st.text_input("Especifique el trámite (Ej. Cambio de uso de suelo, Exclusivo estacionamiento) *")
+
     with c_gir:
         giro = st.selectbox(
             "Giro o Actividad",
-            ["Minisuper / Abarrote", "Ultramarino / Licorería", "Restaurante Bar", "Restaurante Simultáneo", "Centro Nocturno / Cabaret", "Hotel (Solo Anexos)"]
+            ["Minisuper / Abarrote", "Ultramarino / Licorería", "Restaurante Bar", "Restaurante Simultáneo", "Centro Nocturno / Cabaret", "Hotel (Solo Anexos)", "Otro / No aplica"]
         )
 
     c_fol, c_nom = st.columns([1, 2])
@@ -112,7 +119,6 @@ with st.form("form_ciudadano"):
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>2. Ubicación del Establecimiento</div></div>", unsafe_allow_html=True)
     
-    # --- MINITUTORIAL PARA CELULARES ---
     with st.expander("📲 ¿Cómo copiar y pegar mi ubicación desde el celular? (Toca aquí para ver instrucciones)"):
         st.markdown("""
         **Paso 1: Copiar el enlace**
@@ -154,7 +160,12 @@ with st.form("form_ciudadano"):
     if enviar_btn:
         if not contribuyente or not nombre_comercial or not direccion_escrita or not telefono or not enlace_mapa:
             st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio, Teléfono y la Ubicación.")
+        elif tipo_tramite == "Gestiones Diversas (Especificar)" and not detalle_gestion:
+            st.error("⚠️ Por favor especifique de qué trata su Gestión Diversa.")
         else:
+            tramite_base = f"Gestión Diversa: {detalle_gestion}" if tipo_tramite == "Gestiones Diversas (Especificar)" else tipo_tramite
+            tipo_guardar = f"{tramite_base} - {giro}"
+
             nombres_archivos = []
             if archivo_ine: nombres_archivos.append(f"INE:{archivo_ine.name}")
             if archivo_rfc: nombres_archivos.append(f"RFC:{archivo_rfc.name}")
@@ -175,7 +186,7 @@ with st.form("form_ciudadano"):
                 cur = con.cursor()
                 cur.execute(
                     "INSERT INTO tramites (tipo, folio, contribuyente, dato_actualizado, observaciones) VALUES (%s, %s, %s, %s, %s)",
-                    (f"{tipo_tramite} - {giro}", folio if folio else "S/F", contribuyente, detalle_compuesto, observaciones)
+                    (tipo_guardar, folio if folio else "S/F", contribuyente, detalle_compuesto, observaciones)
                 )
                 con.commit()
                 cur.close()
