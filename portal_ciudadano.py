@@ -1,16 +1,38 @@
 import streamlit as st
 import psycopg2
 import urllib.parse
-import re
+import os
 import datetime
+import re
+from PIL import Image
 
-# Conexión a la base de datos central en la nube
+# --- CONEXIÓN A LA BASE DE DATOS EN LA NUBE (NEON.TECH) ---
 DATABASE_URL = "postgresql://neondb_owner:npg_Y6RvW8yqBGjH@ep-lingering-thunder-ar76lrca-pooler.c-4.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 def obtener_conexion():
     return psycopg2.connect(DATABASE_URL, client_encoding='utf8')
 
-st.set_page_config(page_title="Registro de Trámites - Los Cabos", layout="centered")
+# Inicializar tabla si no existe (agregando columna para archivos si se requiere)
+try:
+    con_init = obtener_conexion()
+    cur_init = con_init.cursor()
+    cur_init.execute("""
+        CREATE TABLE IF NOT EXISTS tramites (
+            id SERIAL PRIMARY KEY,
+            tipo VARCHAR(255),
+            folio VARCHAR(100),
+            contribuyente VARCHAR(255),
+            dato_actualizado TEXT,
+            observaciones TEXT
+        )
+    """)
+    con_init.commit()
+    cur_init.close()
+    con_init.close()
+except Exception:
+    pass
+
+st.set_page_config(page_title="Ventanilla Digital - Portal Ciudadano", layout="wide")
 
 st.markdown("""
 <style>
@@ -19,106 +41,196 @@ st.markdown("""
         color: white;
         border-radius: 6px;
         font-weight: bold;
-        width: 100%;
-        padding: 10px;
     }
     div.stButton > button:first-child:hover {
         background-color: #15457a;
     }
-    .header-box {
+    .caja-bloque {
         background-color: #f8f9fa;
-        border-left: 5px solid #0b2d54;
-        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-left: 4px solid #0b2d54;
+        padding: 10px 14px;
+        margin-top: 10px;
+        margin-bottom: 10px;
         border-radius: 4px;
-        margin-bottom: 20px;
+    }
+    .titulo-caja {
+        color: #0b2d54;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<div class='header-box'><h2 style='color:#0b2d54; margin:0;'>Ventanilla Digital de Registro</h2><p style='margin:0; color:#555;'>Ingreso de datos preliminares para apertura de expediente de licencia comercial</p></div>", unsafe_allow_html=True)
+st.markdown("<br><h1 style='text-align: center; color: #0b2d54;'>XV Ayuntamiento de Los Cabos</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #555; font-size: 1.2rem;'>Ventanilla Digital de Registro de Trámites y Licencias</p><br>", unsafe_allow_html=True)
 
-with st.form("form_ciudadano", clear_on_submit=True):
-    st.subheader("1. Datos del Solicitante y Establecimiento")
-    contribuyente = st.text_input("Nombre completo del Propietario o Razón Social *")
-    nombre_comercial = st.text_input("Nombre Comercial del Establecimiento (como aparece en fachada) *")
-    telefono = st.text_input("Teléfono de Contacto WhatsApp (10 dígitos) *")
+with st.form("form_ciudadano"):
+    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>1. Datos Generales del Solicitante y Establecimiento</div></div>", unsafe_allow_html=True)
     
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        tipo_tramite = st.selectbox("Trámite a realizar", [
-            "Solicitud de Licencia Nueva con Venta de Bebidas Alcohólicas",
-            "Licencia Nueva Comercial (Sin Alcohol)",
-            "Refrendo de Licencia",
-            "Cambio de Domicilio",
-            "Cambio de Giro o Actividad"
-        ])
-    with col_t2:
-        giro = st.selectbox("Giro Comercial", [
-            "Minisuper / Abarrote",
-            "Ultramarino / Licorería",
-            "Restaurante Bar",
-            "Restaurante Simultáneo",
-            "Comercio General / Servicios",
-            "Otro"
-        ])
-
-    st.subheader("2. Ubicación del Inmueble")
-    direccion = st.text_input("Calle, Número exterior/interior y Colonia *")
-    
-    col_c1, col_c2, col_c3 = st.columns(3)
-    with col_c1:
-        mz = st.text_input("Manzana")
-    with col_c2:
-        lt = st.text_input("Lote")
-    with col_c3:
-        clave_cat = st.text_input("Clave Catastral (si cuenta con ella)")
-
-    link_mapa = st.text_input("📍 Enlace de ubicación de Google Maps o Waze (opcional)")
-    notas = st.text_area("Observaciones o especificaciones adicionales del local")
-
-    enviado = st.form_submit_button("📤 Enviar Registro para Apertura de Expediente")
-
-if enviado:
-    if not contribuyente or not telefono or not nombre_comercial:
-        st.error("Por favor complete los campos obligatorios marcados con (*).")
-    else:
-        # Extracción automática de coordenadas si pegaron link
-        lat_res, lon_res = "", ""
-        if link_mapa:
-            limpio = urllib.parse.unquote(link_mapa)
-            m1 = re.search(r"@([-\d.]+),([-\d.]+)", limpio)
-            m2 = re.search(r"ll=([-\d.]+),([-\d.]+)", limpio)
-            m3 = re.search(r"[?&]q=([-\d.]+)[,%](?:2C)?([-\d.]+)", limpio)
-            m4 = re.search(r"q=([-\d.]+),([-\d.]+)", limpio)
-            m5 = re.search(r"([-\d]{2,3}\.\d+)[,\s]+([-\d]{2,4}\.\d+)", limpio)
-            if m1: lat_res, lon_res = m1.group(1), m1.group(2)
-            elif m2: lat_res, lon_res = m2.group(1), m2.group(2)
-            elif m3: lat_res, lon_res = m3.group(1), m3.group(2)
-            elif m4: lat_res, lon_res = m4.group(1), m4.group(2)
-            elif m5: lat_res, lon_res = m5.group(1), m5.group(2)
-
-        fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
-        cat_str = f"Mz: {mz} | Lt: {lt} | Clave: {clave_cat}"
-        
-        # Generar folio preliminar de registro externo
-        folio_temporal = f"REG-{datetime.datetime.now().strftime('%m%d%H%M')}"
-        
-        detalle_compuesto = (
-            f"Fecha: {fecha_hoy} | Tel: {telefono} | Dir: {direccion} | NomCom: {nombre_comercial} | "
-            f"TipoEst: Único | Cat: {cat_str} | Propiedad: Pendiente | Lat: {lat_res} | Lon: {lon_res} | Link: {link_mapa} | Foto:  | "
-            f"Origen: Registro_Ciudadano_Web"
+    c_tram, c_gir = st.columns(2)
+    with c_tram:
+        tipo_tramite = st.selectbox(
+            "Tipo de Trámite / Solicitud",
+            [
+                "Solicitud de Licencia Nueva con Venta de Bebidas Alcohólicas",
+                "01.- Clausura Definitiva",
+                "02.- Cambio de Propietario / Traspaso",
+                "03.- Cambio de Denominación o Razón Social",
+                "04.- Cambio de Domicilio",
+                "05.- Cambio de Actividad / Giro Comercial",
+                "Refrendo de Licencia de Alcohol",
+                "Anexo de Bebidas Alcohólicas (Exclusivo Hotelería)"
+            ]
         )
+    with c_gir:
+        giro = st.selectbox(
+            "Giro o Actividad",
+            ["Minisuper / Abarrote", "Ultramarino / Licorería", "Restaurante Bar", "Restaurante Simultáneo", "Centro Nocturno / Cabaret", "Hotel (Solo Anexos)"]
+        )
+
+    c_fol, c_nom = st.columns([1, 2])
+    with c_fol:
+        folio = st.text_input("Número de Folio (Si ya cuenta con uno o dejar en trámite):", value="S/F")
+    with c_nom:
+        contribuyente = st.text_input("Nombre del Propietario o Razón Social *")
+
+    c_com1, c_com2 = st.columns([2, 1])
+    with c_com1:
+        nombre_comercial = st.text_input("Nombre Comercial del Establecimiento (Ej. Minisúper El Paraíso) *")
+    with c_com2:
+        tipo_establecimiento = st.selectbox("Característica:", ["Único", "Matriz", "Sucursal"])
+
+    direccion_escrita = st.text_input("Domicilio del Establecimiento (Calle, Número, Colonia) *")
+    
+    c_mz, c_lt, c_cve = st.columns(3)
+    with c_mz:
+        manzana_cat = st.text_input("Manzana:")
+    with c_lt:
+        lote_cat = st.text_input("Lote:")
+    with c_cve:
+        clave_catastral = st.text_input("Clave Catastral (Opcional):")
         
-        try:
-            con = obtener_conexion()
-            cur = con.cursor()
-            cur.execute(
-                "INSERT INTO tramites (tipo, folio, contribuyente, dato_actualizado, observaciones) VALUES (%s, %s, %s, %s, %s)",
-                (f"{tipo_tramite} - {giro}", folio_temporal, contribuyente, detalle_compuesto, f"Ingresado vía portal web. Notas: {notas}")
+    cat_str = f"Mz: {manzana_cat} | Lt: {lote_cat} | Clave: {clave_catastral}"
+
+    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>2. Ubicación Automática del Establecimiento</div></div>", unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div style="background-color: #eef2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+            <p style="margin: 0; font-size: 0.95rem; color: #0b2d54; font-weight: bold;">
+                📱 Opción en campo (Celular):
+            </p>
+            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #555;">
+                Usa el botón para capturar tus coordenadas GPS actuales de forma automática:
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="text-align: center; margin: 10px 0;">
+            <button type="button" onclick="
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        alert('¡Ubicación GPS capturada con éxito! Lat: ' + position.coords.latitude.toFixed(6) + ', Lon: ' + position.coords.longitude.toFixed(6));
+                        const inputLat = document.querySelector('input[aria-label*=\'Latitud\']');
+                        const inputLon = document.querySelector('input[aria-label*=\'Longitud\']');
+                        if(inputLat && inputLon) {
+                            inputLat.value = position.coords.latitude.toFixed(6);
+                            inputLon.value = position.coords.longitude.toFixed(6);
+                            inputLat.dispatchEvent(new Event('input', { bubbles: true }));
+                            inputLon.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }, function(error) {
+                        alert('Error al obtener ubicación. Asegúrate de dar permisos de GPS.');
+                    });
+                } else {
+                    alert('Tu navegador no soporta geolocalización.');
+                }
+            " style="background-color: #0b2d54; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%;">
+                📍 Obtener Ubicación GPS Actual Automáticamente
+            </button>
+        </div>
+    """, unsafe_allow_html=True)
+
+    c_lat, c_lon = st.columns(2)
+    with c_lat:
+        lat_input = st.text_input("Latitud:", value="")
+    with c_lon:
+        lon_input = st.text_input("Longitud:", value="")
+
+    enlace_mapa = st.text_input("Opcional: Enlace alternativo de Google Maps:")
+    telefono = st.text_input("Teléfono de Contacto (WhatsApp) *")
+
+    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>3. Requisitos y Carga de Documentos Digitales</div></div>", unsafe_allow_html=True)
+    st.write("Marca los documentos con los que cuentas y adjúntalos (PDF o fotografía clara):")
+    
+    c_sol_giros = st.checkbox("Solicitud Oficial debidamente llenada")
+    c_ine = st.checkbox("Identificación Oficial (INE)")
+    c_rfc = st.checkbox("Constancia de Situación Fiscal (RFC)")
+    c_dom = st.checkbox("Comprobante de Domicilio")
+    c_agua = st.checkbox("Comprobante de Agua Potable al corriente (OOMSAPAS)")
+    c_predial = st.checkbox("Recibo de Impuesto Predial Vigente")
+    c_croquis = st.checkbox("Croquis de Localización")
+
+    # Campos para subir archivos directamente
+    st.markdown("<p style='font-weight: bold; color: #0b2d54; margin-top: 15px;'>📁 Adjuntar Documentación Requerida:</p>", unsafe_allow_html=True)
+    
+    archivo_ine = st.file_uploader("Subir INE / Identificación Oficial (PDF o Imagen)", type=["pdf", "png", "jpg", "jpeg"])
+    archivo_rfc = st.file_uploader("Subir Constancia Fiscal / RFC (PDF o Imagen)", type=["pdf", "png", "jpg", "jpeg"])
+    archivo_domicilio = st.file_uploader("Subir Comprobante de Domicilio / Predial / Agua (PDF o Imagen)", type=["pdf", "png", "jpg", "jpeg"])
+    archivo_croquis = st.file_uploader("Subir Croquis o Documentos Adicionales (PDF o Imagen)", type=["pdf", "png", "jpg", "jpeg"])
+
+    observaciones = st.text_area("Comentarios adicionales o dudas sobre tu trámite:")
+
+    enviar_btn = st.form_submit_button("🚀 Enviar Registro y Documentos a la Ventanilla", use_container_width=True)
+
+    if enviar_btn:
+        if not contribuyente or not nombre_comercial or not direccion_escrita or not telefono:
+            st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio y Teléfono.")
+        else:
+            lat_res, lon_res = lat_input, lon_input
+            
+            if not lat_res and enlace_mapa:
+                limpio = urllib.parse.unquote(enlace_mapa)
+                m1 = re.search(r"@([-\d.]+),([-\d.]+)", limpio)
+                m2 = re.search(r"ll=([-\d.]+),([-\d.]+)", limpio)
+                m3 = re.search(r"[?&]q=([-\d.]+)[,%](?:2C)?([-\d.]+)", limpio)
+                m4 = re.search(r"q=([-\d.]+),([-\d.]+)", limpio)
+                m5 = re.search(r"([-\d]{2,3}\.\d+)[,\s]+([-\d]{2,4}\.\d+)", limpio)
+                
+                if m1: lat_res, lon_res = m1.group(1), m1.group(2)
+                elif m2: lat_res, lon_res = m2.group(1), m2.group(2)
+                elif m3: lat_res, lon_res = m3.group(1), m3.group(2)
+                elif m4: lat_res, lon_res = m4.group(1), m4.group(2)
+                elif m5: lat_res, lon_res = m5.group(1), m5.group(2)
+
+            # Verificar nombres de archivos adjuntos si los subieron
+            nombres_archivos = []
+            if archivo_ine: nombres_archivos.append(f"INE:{archivo_ine.name}")
+            if archivo_rfc: nombres_archivos.append(f"RFC:{archivo_rfc.name}")
+            if archivo_domicilio: nombres_archivos.append(f"Dom:{archivo_domicilio.name}")
+            if archivo_croquis: nombres_archivos.append(f"Croquis/Extra:{archivo_croquis.name}")
+            
+            str_archivos = " | Archivos: " + (", ".join(nombres_archivos) if nombres_archivos else "Ninguno adjunto")
+
+            detalle_compuesto = (
+                f"Fecha: {datetime.date.today().strftime('%d/%m/%Y')} | Tel: {telefono} | Dir: {direccion_escrita} | NomCom: {nombre_comercial} | "
+                f"TipoEst: {tipo_establecimiento} | Cat: {cat_str} | Lat: {lat_res} | Lon: {lon_res} | Link: {enlace_mapa} | "
+                f"SolGiros:{c_sol_giros} INE:{c_ine} RFC:{c_rfc} Dom:{c_dom} Agua:{c_agua} Predial:{c_predial} Croquis:{c_croquis}"
+                f"{str_archivos}"
             )
-            con.commit()
-            cur.close()
-            con.close()
-            st.success(f"✅ Su información ha sido enviada correctamente. Se ha generado el folio de recepción preliminar: **{folio_temporal}**. Un gestor se comunicará vía WhatsApp.")
-        except Exception as e:
-            st.error(f"Error al enviar registro: {e}")
+            
+            try:
+                con = obtener_conexion()
+                cur = con.cursor()
+                cur.execute(
+                    "INSERT INTO tramites (tipo, folio, contribuyente, dato_actualizado, observaciones) VALUES (%s, %s, %s, %s, %s)",
+                    (f"{tipo_tramite} - {giro}", folio if folio else "S/F", contribuyente, detalle_compuesto, observaciones)
+                )
+                con.commit()
+                cur.close()
+                con.close()
+                st.success("✅ ¡Su registro y documentación han sido enviados exitosamente al XV Ayuntamiento de Los Cabos!")
+            except Exception as err:
+                st.error(f"Error al registrar su trámite: {err}")
