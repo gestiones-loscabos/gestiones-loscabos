@@ -70,15 +70,15 @@ with st.form("form_ciudadano"):
         tipo_tramite = st.selectbox(
             "Tipo de Trámite / Solicitud",
             [
-                "Solicitud de Licencia Nueva con Venta de Bebidas Alcohólicas",
-                "01.- Clausura Definitiva",
-                "02.- Cambio de Propietario / Traspaso",
-                "03.- Cambio de Denominación o Razón Social",
-                "04.- Cambio de Domicilio",
-                "05.- Cambio de Actividad / Giro Comercial",
-                "Refrendo de Licencia de Alcohol",
+                "Licencia Nueva (Venta de Bebidas Alcohólicas)",
+                "Refrendo Anual de Licencia",
+                "Solicitud de Actividad o Inactividad",
+                "Clausura Definitiva",
+                "Cambio de Propietario / Traspaso",
+                "Cambio de Denominación o Razón Social",
+                "Cambio de Domicilio",
+                "Cambio de Actividad / Giro Comercial",
                 "Anexo de Bebidas Alcohólicas (Exclusivo Hotelería)",
-                "Aviso de Actividad / Inactividad de Licencia",
                 "Gestiones Diversas (Especificar)"
             ]
         )
