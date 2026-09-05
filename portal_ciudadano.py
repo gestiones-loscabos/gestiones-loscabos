@@ -117,10 +117,10 @@ with st.form("form_ciudadano"):
     st.markdown("""
         <div style="background-color: #eef2f7; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
             <p style="margin: 0; font-size: 0.95rem; color: #0b2d54; font-weight: bold;">
-                💡 Nota sobre la ubicación:
+                💡 Instrucción de Ubicación:
             </p>
             <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #555;">
-                Puedes pegar directamente tu enlace de Google Maps (compartir ubicación actual) o escribir las coordenadas latitud y longitud.
+                Escribe las coordenadas de tu ubicación (Ej. 23.05, -109.70) o pega el enlace largo de Google Maps del navegador.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -131,7 +131,7 @@ with st.form("form_ciudadano"):
     with c_lon:
         lon_input = st.text_input("Longitud:", value="")
 
-    enlace_mapa = st.text_input("Enlace de Google Maps (Ej: https://maps.app.goo.gl/... o pega coordenadas de Google Maps):")
+    enlace_mapa = st.text_input("O pega aquí el enlace de Google Maps:")
     telefono = st.text_input("Teléfono de Contacto (WhatsApp) *")
 
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>3. Requisitos y Carga de Documentos Digitales</div></div>", unsafe_allow_html=True)
@@ -162,8 +162,6 @@ with st.form("form_ciudadano"):
         else:
             lat_res, lon_res = lat_input, lon_input
             
-            # Extracción automática robusta por si pegan cualquier tipo de enlace o texto de Google Maps
-            texto_a_buscar = (enlace_mapa + " " + lat_input + " " + lon_input)
             if enlace_mapa:
                 limpio = urllib.parse.unquote(enlace_mapa)
                 m1 = re.search(r"@([-\d.]+),([-\d.]+)", limpio)
