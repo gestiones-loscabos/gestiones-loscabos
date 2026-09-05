@@ -161,7 +161,7 @@ with st.form("form_ciudadano"):
         if not contribuyente or not nombre_comercial or not direccion_escrita or not telefono or not enlace_mapa:
             st.error("⚠️ Por favor completa los campos obligatorios (*): Propietario, Nombre Comercial, Domicilio, Teléfono y la Ubicación.")
         elif tipo_tramite == "Gestiones Diversas (Especificar)" and not detalle_gestion:
-            st.error("⚠️ Por favor especifique de qué trata su Gestión Diversa.")
+            st.error("⚠️ Por favor especifique de qué trata su Gestión Diversas.")
         else:
             tramite_base = f"Gestión Diversa: {detalle_gestion}" if tipo_tramite == "Gestiones Diversas (Especificar)" else tipo_tramite
             tipo_guardar = f"{tramite_base} - {giro}"
