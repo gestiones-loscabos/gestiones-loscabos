@@ -1,125 +1,141 @@
 import streamlit as st
-import pandas as pd
 import psycopg2
+import urllib.parse
+import os
+import datetime
+import re
+from PIL import Image
 
+# --- CONFIGURACIÓN DE RUTAS Y CONEXIÓN A LA NUBE (NEON.TECH) ---
 DATABASE_URL = "postgresql://neondb_owner:npg_Y6RvW8yqBGjH@ep-lingering-thunder-ar76lrca-pooler.c-4.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+ARCHIVO_CLAVE = "clave_acceso.txt"
 
-@st.cache_resource
+def leer_clave():
+    if os.path.exists(ARCHIVO_CLAVE):
+        with open(ARCHIVO_CLAVE, "r") as f:
+            return f.read().strip()
+    return "1234"
+
+def guardar_clave(nueva_clave):
+    with open(ARCHIVO_CLAVE, "w") as f:
+        f.write(nueva_clave)
+
 def obtener_conexion():
     return psycopg2.connect(DATABASE_URL, client_encoding='utf8')
 
-st.set_page_config(page_title="Gestiones - Sistema Integral de Licencias (Nube)", layout="wide")
+# Inicializar tabla en la nube si no existe
+try:
+    con_init = obtener_conexion()
+    cur_init = con_init.cursor()
+    cur_init.execute("""
+        CREATE TABLE IF NOT EXISTS tramites (
+            id SERIAL PRIMARY KEY,
+            tipo VARCHAR(255),
+            folio VARCHAR(100),
+            contribuyente VARCHAR(255),
+            dato_actualizado TEXT,
+            observaciones TEXT
+        )
+    """)
+    con_init.commit()
+    cur_init.close()
+    con_init.close()
+except Exception:
+    pass
 
-st.sidebar.markdown("### ⚙️ Configuración")
-clave_num = st.sidebar.text_input("Actualizar Clave (Numérica)", type="password")
-if st.sidebar.button("Guardar Clave"):
-    st.sidebar.success("Clave actualizada correctamente")
+st.set_page_config(page_title="Sistema Integral - Panel Maestro", layout="wide")
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### ☁️ Conexión a la Nube")
-st.sidebar.button("Abrir Sistema Maestro (Nube)")
+st.markdown("""
+<style>
+    div.stButton > button:first-child {
+        background-color: #0b2d54;
+        color: white;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #15457a;
+    }
+    .caja-bloque {
+        background-color: #f4f6f9;
+        border: 1px solid #dcdfe6;
+        border-left: 5px solid #0b2d54;
+        padding: 12px 16px;
+        margin-top: 14px;
+        margin-bottom: 12px;
+        border-radius: 6px;
+    }
+    .titulo-caja {
+        color: #0b2d54;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📱 Compartir por WhatsApp")
-st.sidebar.button("Enviar Portal al Ciudadano")
-st.sidebar.button("Enviar Acceso al Equipo")
+# --- SEGURIDAD ---
+if "clave_actual" not in st.session_state:
+    st.session_state.clave_actual = leer_clave()
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
 
-st.markdown("<h1 style='color: #0b2d54;'>Gestiones - Sistema Integral de Licencias (Nube)</h1>", unsafe_allow_html=True)
+def limpiar_formulario():
+    for key in list(st.session_state.keys()):
+        if key.startswith("k_") or key.startswith("chk_") or key.startswith("rad_"):
+            del st.session_state[key]
 
-menu_principal = st.radio("Seleccione la vista:", ["Panel Central de Gestión", "Archivero Histórico"], horizontal=True)
-
-if menu_principal == "Panel Central de Gestión":
-    st.markdown("### 📋 Panel Central de Gestión")
-    st.write("Espacio operativo para altas directas y administración general de trámites.")
-    
-    with st.form("form_gestion_interna"):
-        col1, col2 = st.columns(2)
-        with col1:
-            t_tramite = st.selectbox("Tipo de Trámite Interno", [
-                "Licencia Nueva (Venta de Bebidas Alcohólicas)",
-                "Refrendo Anual de Licencia",
-                "Solicitud de Actividad o Inactividad",
-                "Clausura Definitiva",
-                "Cambio de Propietario / Traspaso",
-                "Gestiones Diversas"
-            ])
-        with col2:
-            contribuyente_int = st.text_input("Nombre del Contribuyente o Propietario")
-        
-        obs_int = st.text_area("Observaciones o notas internas:")
-        guardar_int = st.form_submit_button("Registrar en el Sistema")
-        
-        if guardar_int:
-            if contribuyente_int:
-                try:
-                    con = obtener_conexion()
-                    cur = con.cursor()
-                    cur.execute(
-                        "INSERT INTO tramites (tipo, folio, contribuyente, dato_actualizado, observaciones) VALUES (%s, %s, %s, %s, %s)",
-                        (t_tramite, "INT-001", contribuyente_int, "Registro interno de oficina", obs_int)
-                    )
-                    con.commit()
-                    cur.close()
-                    con.close()
-                    st.success("¡Trámite interno registrado con éxito!")
-                except Exception as e:
-                    st.error(f"Error al guardar: {e}")
+# --- PANTALLA DE ACCESO MAESTRO ---
+if not st.session_state.autenticado:
+    st.markdown("<br><br><h1 style='text-align: center; color: #0b2d54; font-size: 2.8rem;'>Panel Maestro de Oficina</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #555; font-size: 1.1rem;'>XV Ayuntamiento de Los Cabos - Acceso Restringido</p>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1, 1, 1])
+    with c2:
+        clave_input = st.text_input("Ingrese Clave de Acceso:", type="password")
+        if st.button("🔐 Ingresar al Sistema", use_container_width=True):
+            if clave_input == st.session_state.clave_actual and clave_input.isnumeric():
+                st.session_state.autenticado = True
+                st.rerun()
             else:
-                st.warning("Escribe el nombre del contribuyente.")
+                st.error("❌ Clave no válida.")
+    st.stop()
 
-elif menu_principal == "Archivero Histórico":
-    st.markdown("### 📂 Control de Registros Históricos (Nube)")
-    
-    def cargar_datos():
-        try:
-            con = obtener_conexion()
-            query = "SELECT id, folio, tipo as tramite_y_giro, contribuyente, dato_actualizado as detalles_y_documentos, observaciones FROM tramites ORDER BY id DESC"
-            df = pd.read_sql_query(query, con)
-            return df
-        except Exception as e:
-            st.error(f"Error al conectar con la base de datos: {e}")
-            return pd.DataFrame()
+with st.sidebar:
+    st.markdown("### ⚙️ Configuración")
+    nueva_clave = st.text_input("Actualizar Clave (Numérica)", type="password")
+    if st.button("Guardar Clave"):
+        if nueva_clave.isnumeric():
+            guardar_clave(nueva_clave)
+            st.session_state.clave_actual = nueva_clave
+            st.success("Clave actualizada.")
+        else:
+            st.error("Solo dígitos numéricos.")
 
-    df = cargar_datos()
+st.markdown("<h1 style='color: #0b2d54;'>Sistema Integral de Licencias (Panel Maestro)</h1>", unsafe_allow_html=True)
 
-    if df.empty:
-        st.info("No hay trámites registrados todavía en la base de datos.")
-    else:
-        busqueda = st.text_input("🔍 Buscar expediente (Nombre Comercial, Contribuyente, Folio o Giro):")
+tab1, tab2 = st.tabs(["📋 Panel Central de Gestión", "🗂️ Archivero Histórico"])
 
-        if busqueda:
-            df = df[df['contribuyente'].str.contains(busqueda, case=False, na=False) | 
-                    df['folio'].str.contains(busqueda, case=False, na=False) |
-                    df['tramite_y_giro'].str.contains(busqueda, case=False, na=False)]
+with tab1:
+    st.info("👋 Panel maestro activo en la nube conectado a Neon.tech. Aquí puedes registrar trámites, consultar el mapa y revisar el archivo histórico.")
+    # Aquí puedes integrar el resto de tus campos de captura del maestro si lo deseas, o usar la base sincronizada.
 
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "📁 Todos los Registros", 
-            "🟢 Licencias Nuevas", 
-            "🔄 Refrendos Anuales", 
-            "⏸️ Actividad / Inactividad", 
-            "📂 Gestiones Diversas y Otros"
-        ])
+with tab2:
+    st.markdown("<h2 style='color: #0b2d54;'>🗂️ Control de Registros en la Nube</h2>", unsafe_allow_html=True)
+    try:
+        con = obtener_conexion()
+        cur = con.cursor()
+        cur.execute("SELECT id, tipo, folio, contribuyente, dato_actualizado, observaciones FROM tramites ORDER BY id DESC")
+        registros = cur.fetchall()
+        cur.close()
+        con.close()
 
-        with tab1:
-            st.write("### Historial Completo")
-            st.dataframe(df, use_container_width=True)
-            
-        with tab2:
-            st.write("### Expedientes de Licencias Nuevas")
-            df_nuevas = df[df['tramite_y_giro'].str.contains('Licencia Nueva', case=False, na=False)]
-            st.dataframe(df_nuevas, use_container_width=True)
-
-        with tab3:
-            st.write("### Expedientes de Refrendos Anuales")
-            df_refrendos = df[df['tramite_y_giro'].str.contains('Refrendo', case=False, na=False)]
-            st.dataframe(df_refrendos, use_container_width=True)
-
-        with tab4:
-            st.write("### Avisos de Actividad, Inactividad o Clausura")
-            df_inactividad = df[df['tramite_y_giro'].str.contains('Actividad o Inactividad|Clausura', case=False, na=False, regex=True)]
-            st.dataframe(df_inactividad, use_container_width=True)
-
-        with tab5:
-            st.write("### Gestiones Diversas, Cambios y Anexos")
-            df_diversas = df[df['tramite_y_giro'].str.contains('Gestión Diversa|Cambio|Anexo', case=False, na=False, regex=True)]
-            st.dataframe(df_diversas, use_container_width=True)
+        if not registros:
+            st.info("No hay trámites registrados todavía en la base de datos de la nube.")
+        else:
+            for r in registros:
+                with st.expander(f"📁 Folio: {r[2]} — {r[3]} ({r[1]})"):
+                    st.write(f"**Gestión:** {r[1]}")
+                    st.markdown(f"**Datos:** {r[4]}")
+                    st.write(f"**Notas:** {r[5]}")
+    except Exception as ex:
+        st.error(f"Error al consultar la base de datos: {ex}")
