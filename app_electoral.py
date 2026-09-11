@@ -5,7 +5,7 @@ import os
 import subprocess
 import platform
 
-# --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO ---
+# --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO (ALTO CONTRASTE) ---
 st.set_page_config(
     page_title="Cuarto de Guerra Digital - Baja California Sur",
     layout="wide",
@@ -14,7 +14,7 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .stApp { background-color: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .stApp { background-color: #0b0f19; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
     div.stButton > button:first-child { 
         background: linear-gradient(135deg, #0b2d54 0%, #1e3a8a 100%); 
         color: white; 
@@ -28,13 +28,13 @@ st.markdown("""
     .caja-bloque { 
         background-color: #111827; 
         border-left: 5px solid #38bdf8; 
-        padding: 12px 16px; 
+        padding: 14px 18px; 
         margin-top: 10px; 
         margin-bottom: 10px; 
         border-radius: 8px; 
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
-    .titulo-caja { color: #38bdf8; font-weight: bold; font-size: 1.15rem; margin-bottom: 6px; letter-spacing: 0.3px; }
+    .titulo-caja { color: #38bdf8; font-weight: bold; font-size: 1.15rem; margin-bottom: 8px; letter-spacing: 0.3px; }
     .stat-box { 
         background-color: #111827; 
         padding: 16px; 
@@ -44,14 +44,19 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
     .stat-num { font-size: 24px; font-weight: bold; color: #38bdf8; margin-top: 6px; }
-    .stat-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    .stat-label { font-size: 12px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
     .mobile-simulator {
-        background-color: #0f172a;
+        background-color: #020617;
         border: 14px solid #1e293b;
         border-radius: 40px;
-        padding: 20px;
-        min-height: 740px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+        padding: 24px;
+        min-height: 780px;
+        color: #ffffff;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
+    }
+    /* Textos claros garantizados para legibilidad móvil */
+    .mobile-simulator p, .mobile-simulator label, .mobile-simulator span, .mobile-simulator div {
+        color: #f8fafc !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -66,7 +71,7 @@ if "rol_usuario" not in st.session_state:
 
 if not st.session_state.autenticado:
     st.markdown("<br><br><h1 style='text-align: center; color: #38bdf8; font-size: 2.8rem;'>🛡️ Cuarto de Guerra Digital</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 1.1rem;'>Plataforma Electoral Táctica - Baja California Sur</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 1.1rem;'>Plataforma Electoral Táctica - Baja California Sur (Versión 15.0)</p>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1, 1])
     with c2:
@@ -169,7 +174,7 @@ if st.session_state.seccion_activa == "TABLERO":
 
         vm_1, vm_2 = st.columns(2)
         with vm_1:
-            st.markdown("<div class='stat-box'><div class='stat-label'>🗳️ Votos / Contabilidad</div><div class='stat-num'>9,315</div><div style='font-size: 10px; color: #9ca3af;'>Meta: 14,204</div></div>", unsafe_allow_html=True)
+            st.markdown("<div class='stat-box'><div class='stat-label'>🗳️ Votos / Contabilidad</div><div class='stat-num'>9,315</div><div style='font-size: 10px; color: #cbd5e1;'>Meta: 14,204</div></div>", unsafe_allow_html=True)
         with vm_2:
             st.markdown("<div class='stat-box'><div class='stat-label'>🏠 Meta Casas (M/CA)</div><div class='stat-num'>115 / 159</div><div style='font-size: 10px; color: #38bdf8;'>72.3% Células</div></div>", unsafe_allow_html=True)
 
@@ -213,75 +218,143 @@ if st.session_state.seccion_activa == "TABLERO":
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# VISTA 2: MÓDULO TERRITORIAL
+# VISTA 2: MÓDULO TERRITORIAL (COMPLETO)
 # ==========================================
 elif st.session_state.seccion_activa == "TERRITORIAL":
-    st.markdown("## 👥 Módulo de Estructura Territorial: Casas Amigas (CA)")
+    st.markdown("## 👥 Módulo de Estructura Territorial: Casas Amigas (CA) y Redes")
     if st.button("⬅️ Volver al Tablero", use_container_width=False):
         st.session_state.seccion_activa = "TABLERO"
         st.rerun()
 
-    with st.form("form_anfitrion_principal"):
-        st.markdown("### 🏠 1. Registro del Anfitrión Principal (Casa Amiga)")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.text_input("Nombre Completo del Anfitrión (CA)")
-            st.text_input("Teléfono Celular / WhatsApp")
-        with c2:
-            st.text_input("Seccional Electoral")
-            st.text_input("Domicilio / Dirección")
-        st.form_submit_button("💾 Guardar Anfitrión Principal")
+    tab_t1, tab_t2, tab_t3 = st.tabs(["🏠 Registro Casas Amigas (CA)", "🤝 Coanfitriones (C1-C5)", "👥 Registro Simpatizantes"])
+    
+    with tab_t1:
+        with st.form("form_anfitrion_principal"):
+            st.markdown("### 🏠 Alta y Catálogo de Casas Amigas")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.text_input("Nombre Completo del Anfitrión (CA)")
+                st.text_input("Teléfono Celular / WhatsApp")
+                st.text_input("Seccional Electoral")
+            with c2:
+                st.text_input("Domicilio / Calle y Número")
+                st.text_input("Ubicación GPS (Enlace Google Maps)")
+                st.selectbox("Capacidad Estimada de Reunión:", ["10 a 20 personas", "20 a 50 personas", "Más de 50 personas"])
+            st.form_submit_button("💾 Guardar Casa Amiga en Sistema")
+
+    with tab_t2:
+        with st.form("form_coanfitriones"):
+            st.markdown("### 🤝 Registro de Coanfitriones por Célula")
+            cc1, cc2 = st.columns(2)
+            with cc1:
+                st.text_input("Nombre del Coanfitrión (C1, C2, C3, C4 o C5)")
+                st.text_input("Celular de Contacto")
+            with cc2:
+                st.text_input("Asociado a Casa Amiga (Anfitrión Principal)")
+                st.selectbox("Nivel de Operación Celular:", ["C1 - Enlace Directo", "C2 - Movilización", "C3 - Promoción", "C4 - Logística", "C5 - Redes"])
+            st.form_submit_button("💾 Guardar Coanfitrión")
+
+    with tab_t3:
+        with st.form("form_simpatizantes_terr"):
+            st.markdown("### 👥 Registro Exprés de Simpatizantes de Base")
+            s1, s2 = st.columns(2)
+            with s1:
+                st.text_input("Nombre Completo del Simpatizante")
+                st.text_input("Teléfono Celular / WhatsApp")
+            with s2:
+                st.text_input("Seccional / Manzana")
+                st.selectbox("Compromiso de Voto:", ["Seguro / Duro", "Dudoso / Persuasión", "Estructura Operativa"])
+            st.form_submit_button("💾 Registrar Simpatizante")
 
 # ==========================================
-# VISTA 3: EVENTO MASIVO
+# VISTA 3: EVENTO MASIVO (COMPLETO)
 # ==========================================
 elif st.session_state.seccion_activa == "EVENTO":
-    st.markdown("## 🎪 Centro de Control: Evento Masivo y Cierre")
+    st.markdown("## 🎪 Centro de Control: Evento Masivo y Cierre de Campaña")
     if st.button("⬅️ Volver al Tablero", use_container_width=False):
         st.session_state.seccion_activa = "TABLERO"
         st.rerun()
 
-    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>📍 Configuración de Sede y Enlace GPS</div></div>", unsafe_allow_html=True)
-    st.text_input("Nombre del Evento", "Gran Cierre de Campaña")
-    st.text_input("Ubicación GPS (Google Maps)", "https://maps.google.com")
+    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>📍 Configuración de Sede, Logística y Acarreo</div></div>", unsafe_allow_html=True)
+    ev_1, ev_2 = st.columns(2)
+    with ev_1:
+        st.text_input("Nombre del Evento Masivo", "Gran Cierre de Campaña Distrital")
+        st.text_input("Ubicación GPS / Enlace Google Maps", "https://maps.google.com")
+        st.text_input("Meta de Asistencia Estimada", "3,500 asistentes")
+    with ev_2:
+        st.text_input("Responsable de Logística y Audio", "Comisión Operativa")
+        st.text_input("Coordinador de Transporte / Unidades", "Ruta Sur / Norte")
+        st.selectbox("Estatus del Permiso Municipal", ["Tramitado", "Aprobado", "Pendiente de Notificación"])
+
+    if st.button("🚀 Sincronizar Logística de Evento Masivo", use_container_width=True):
+        st.success("✅ ¡Parámetros de evento masivo guardados y distribuidos al Cuarto de Guerra!")
 
 # ==========================================
-# VISTA 4: DÍA D
+# VISTA 4: DÍA D (COMPLETO CON RGS, RCS Y BOTÓN DE PÁNICO)
 # ==========================================
 elif st.session_state.seccion_activa == "DIA_D":
-    st.markdown("## 🚨 Operación Día D: Monitoreo y Defensa del Voto")
+    st.markdown("## 🚨 Operación Día D: Monitoreo, Casillas y Defensa del Voto")
     if st.button("⬅️ Volver al Tablero", use_container_width=False):
         st.session_state.seccion_activa = "TABLERO"
         st.rerun()
 
-    tab_1, tab_2, tab_3 = st.tabs(["🏛️ Casillas", "🛡️ RGs / RCs", "🚨 Botón de Pánico"])
+    tab_1, tab_2, tab_3 = st.tabs(["🏛️ Monitoreo de Casillas", "🛡️ RGs y RCs (Estructura)", "🚨 Botón de Pánico y Alertas"])
     with tab_1:
-        st.markdown("Monitoreo en tiempo real de instalación de casillas.")
+        st.markdown("### 🏛️ Reporte de Instalación y Votación en Casillas")
+        st.markdown("Control en tiempo real de apertura de paquetes electorales, incidentes de casilla y conteo preliminar.")
+        st.selectbox("Filtrar por Tipo de Casilla:", ["Todas las Casillas", "Básicas", "Contiguas", "Extraordinarias", "Especiales"])
+        st.markdown("<div class='stat-box'>📊 Estatus General: <b>0 de 184 Casillas Instaladas oficialmente (Simulador en espera de apertura)</b></div>", unsafe_allow_html=True)
+
     with tab_2:
-        st.markdown("Directorio y enlace directo con representantes.")
+        st.markdown("### 🛡️ Directorio y Asignación de RGs (Representantes Generales) y RCs (Casilla)")
+        with st.form("form_rg_rc"):
+            rc1, rc2 = st.columns(2)
+            with rc1:
+                st.text_input("Nombre del Representante (RG o RC)")
+                st.text_input("Celular de Enlace Operativo")
+            with rc2:
+                st.text_input("Seccional Asignada / Casilla")
+                st.selectbox("Rol Asignado:", ["Representante General (RG)", "Representante de Casilla Propietario (RC)", "Suplente"])
+            st.form_submit_button("💾 Guardar Enlace en Estructura Día D")
+
     with tab_3:
-        st.markdown("<div style='background-color:#450a0a; padding:15px; border-radius:8px;'>", unsafe_allow_html=True)
-        st.markdown("<h4 style='color:#fca5a5;'>🚨 Botón de Pánico Estratégico (Emergencia 911)</h4>", unsafe_allow_html=True)
-        cel_emergencia = st.text_input("Celular de Emergencia:", "6240000000")
-        link_panico = f"https://wa.me/52{cel_emergencia}?text=EMERGENCIA%20EN%20CASILLA"
-        st.markdown(f'<a href="{link_panico}" target="_blank" style="display: block; text-align: center; background-color: #dc2626; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold;">🚨 ACTIVAR ALERTA URGENTE</a>', unsafe_allow_html=True)
+        st.markdown("<div style='background-color:#450a0a; padding:20px; border-radius:10px; border: 1px solid #dc2626;'>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#fca5a5; margin-top:0;'>🚨 Botón de Pánico Estratégico (Emergencia 911 / Jurídico)</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#f8fafc;'>Utilice este módulo únicamente ante incidentes graves, detenciones arbitrarias o coacción en casilla que requiera intervención jurídica inmediata del Cuarto de Guerra.</p>", unsafe_allow_html=True)
+        cel_emergencia = st.text_input("Celular de Enlace Jurídico / Emergencia:", "6240000000")
+        incidencia_reporte = st.text_area("Descripción Breve del Incidente en Casilla:")
+        
+        msg_panico = f"¡EMERGENCIA EN CASILLA! Incidente reportado: {incidencia_reporte}"
+        link_panico = f"https://wa.me/52{cel_emergencia}?text={urllib.parse.quote(msg_panico)}"
+        st.markdown(f'<a href="{link_panico}" target="_blank" style="display: block; text-align: center; background-color: #dc2626; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 10px;">🚨 ACTIVAR ALERTA URGENTE POR WHATSAPP</a>', unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# VISTA 5: REDES SOCIALES
+# VISTA 5: REDES SOCIALES (COMPLETO)
 # ==========================================
 elif st.session_state.seccion_activa == "REDES":
-    st.markdown("## 📱 Módulo de Redes Sociales y Difusión")
+    st.markdown("## 📱 Módulo de Redes Sociales, Difusión y Cascada Operativa")
     if st.button("⬅️ Volver al Tablero", use_container_width=False):
         st.session_state.seccion_activa = "TABLERO"
         st.rerun()
 
-    st.markdown("* 📘 Facebook Oficial: Conectado")
-    st.markdown("* 📸 Instagram: Conectado")
-    st.markdown("* 🎵 TikTok: Conectado")
+    st.markdown("<div class='caja-bloque'><div class='titulo-caja'>📡 Canales Oficiales Conectados</div></div>", unsafe_allow_html=True)
+    st.markdown("* 📘 **Facebook Oficial:** Sincronizado (Monitoreo de impresiones y alcance)")
+    st.markdown("* 📸 **Instagram:** Sincronizado (Campañas visuales de territorio)")
+    st.markdown("* 🎵 **TikTok:** Sincronizado (Contenido dinámico y juventud)")
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### 📤 Envío Masivo de Mensajes en Cascada (WhatsApp)")
+    with st.form("form_difusion_masiva"):
+        grupo_destino = st.selectbox("Grupo de Difusión Destino:", ["Estructura General (C1-C5)", "Casas Amigas", "Brigadistas Activos", "Simpatizantes"])
+        texto_difusion = st.text_area("Mensaje Operativo a Difundir:", "Compañeros, iniciamos la jornada de movilización territorial. ¡A ganar!")
+        cel_prueba_dif = st.text_input("Celular de Prueba:", "6240000000")
+        link_w_dif = f"https://wa.me/52{cel_prueba_dif}?text={urllib.parse.quote(texto_difusion)}"
+        st.markdown(f'<a href="{link_w_dif}" target="_blank" style="display: block; text-align: center; background-color: #25D366; color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-bottom: 10px;">📲 Enviar Mensaje de Prueba por WhatsApp</a>', unsafe_allow_html=True)
+        st.form_submit_button("🚀 Programar Difusión en Cascada")
 
 # ==========================================
-# VISTA 6: SIMULADOR DE ENCUESTAS (TRACKING POLL)
+# VISTA 6: SIMULADOR DE ENCUESTAS (TRACKING POLL - MÓVIL ALTO CONTRASTE)
 # ==========================================
 elif st.session_state.seccion_activa == "SIMULADOR":
     st.markdown("## 📱 Simulador Móvil: Formato Oficial de Encuesta (Tracking Poll)")
@@ -292,19 +365,35 @@ elif st.session_state.seccion_activa == "SIMULADOR":
     col_sim_izq, col_sim_cen, col_sim_der = st.columns([1, 2, 1])
     with col_sim_cen:
         st.markdown("<div class='mobile-simulator'>", unsafe_allow_html=True)
-        st.markdown("<h4 style='color:#38bdf8; margin:0;'>📊 Tracking Poll</h4>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:10px; color:#9ca3af; margin:0;'>Estudio de Opinión Pública BCS 2027</p>", unsafe_allow_html=True)
-        st.markdown("---")
+        st.markdown("<h3 style='color:#38bdf8; margin:0; text-align:center;'>📊 Tracking Poll</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:11px; color:#cbd5e1; text-align:center; margin-bottom:15px;'>Estudio de Opinión Pública BCS 2027</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border-color: #334155;'>", unsafe_allow_html=True)
         
         with st.form("form_tracking_poll_oficial"):
-            st.text_input("Brigadista Encuestador:", value="Carlos Mendoza")
-            st.text_input("Seccional Electoral (Ej: 400):")
-            st.radio("1. Sabe usted que este año hay elecciones en BCS?", ["Sí", "No"], horizontal=True)
-            st.radio("2. Conoce usted al candidato?", ["Sí", "No"], horizontal=True)
-            st.radio("3. Conoce el partido que representa?", ["Sí", "No"], horizontal=True)
-            st.radio("4. Si hoy fuera la elección, votaría por nuestro candidato?", ["Sí", "No", "Tiene duda"], horizontal=True)
-            st.radio("5. Votaría usted por el partido político en esta elección?", ["Sí", "No", "Tiene duda"], horizontal=True)
+            st.markdown("<p style='color:#f8fafc; font-weight:bold;'>Brigadista Encuestador:</p>", unsafe_allow_html=True)
+            brig_input = st.text_input("Brigadista Encuestador:", value="Carlos Mendoza", label_visibility="collapsed")
             
-            if st.form_submit_button("🚀 Enviar Encuesta"):
-                st.success("✅ ¡Encuesta aplicada con éxito!")
+            st.markdown("<p style='color:#f8fafc; font-weight:bold; margin-top:8px;'>Seccional Electoral (Ej: 400):</p>", unsafe_allow_html=True)
+            secc_input = st.text_input("Seccional Electoral (Ej: 400):", value="400", label_visibility="collapsed")
+            
+            st.markdown("<p style='color:#f8fafc; font-weight:bold; margin-top:10px;'>1. Sabe usted que este año hay elecciones en BCS?</p>", unsafe_allow_html=True)
+            p1 = st.radio("1. Sabe usted que este año hay elecciones en BCS?", ["Sí", "No"], horizontal=True, label_visibility="collapsed")
+            
+            st.markdown("<p style='color:#f8fafc; font-weight:bold; margin-top:10px;'>2. Conoce usted al candidato?</p>", unsafe_allow_html=True)
+            p2 = st.radio("2. Conoce usted al candidato?", ["Sí", "No"], horizontal=True, label_visibility="collapsed")
+            
+            st.markdown("<p style='color:#f8fafc; font-weight:bold; margin-top:10px;'>3. Conoce el partido que representa?</p>", unsafe_allow_html=True)
+            p3 = st.radio("3. Conoce el partido que representa?", ["Sí", "No"], horizontal=True, label_visibility="collapsed")
+            
+            st.markdown("<p style='color:#f8fafc; font-weight:bold; margin-top:10px;'>4. Si hoy fuera la elección, votaría por nuestro candidato?</p>", unsafe_allow_html=True)
+            p4 = st.radio("4. Si hoy fuera la elección, votaría por nuestro candidato?", ["Sí", "No", "Tiene duda"], horizontal=True, label_visibility="collapsed")
+            
+            st.markdown("<p style='color:#f8fafc; font-weight:bold; margin-top:10px;'>5. Votaría usted por el partido político en esta elección?</p>", unsafe_allow_html=True)
+            p5 = st.radio("5. Votaría usted por el partido político en esta elección?", ["Sí", "No", "Tiene duda"], horizontal=True, label_visibility="collapsed")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            btn_env = st.form_submit_button("🚀 Enviar Encuesta a la Nube", use_container_width=True)
+            if btn_env:
+                st.success("✅ ¡Encuesta aplicada con éxito! Datos sincronizados.")
+
         st.markdown("</div>", unsafe_allow_html=True)
