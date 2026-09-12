@@ -85,7 +85,6 @@ def obtener_conexion():
         except: pass
         return con
     except Exception as e:
-        # Fallback para pruebas offline o entorno aislado
         return None
 
 def abrir_carpeta_pc(ruta):
@@ -144,9 +143,7 @@ if not st.session_state.autenticado:
     with c2:
         pin_input = st.text_input("Ingrese Clave de Acceso (PIN):", type="password", key="login_pin")
         if st.button("🔐 Ingresar al Sistema", use_container_width=True):
-            acceso_concedido = False
             user_data = None
-            
             try:
                 conn = obtener_conexion()
                 if conn:
@@ -165,7 +162,7 @@ if not st.session_state.autenticado:
                 st.session_state.distrito_usuario = user_data[2]
                 st.session_state.rol_usuario = user_data[3] if len(user_data) > 3 and user_data[3] else "GENESIS"
                 st.rerun()
-            elif pin_input == "4521": # PIN maestro por defecto de emergencia
+            elif pin_input == "4521":
                 st.session_state.autenticado = True
                 st.session_state.usuario_actual = "Roberto Hernández"
                 st.session_state.nivel_permiso = "ADMIN"
@@ -1110,7 +1107,8 @@ elif st.session_state.seccion_activa == "REDES":
             cuerpo_comunicado = st.text_area("Redacción del Mensaje Institucional:", "¡Baja California Sur merece más! Consulta nuestras propuestas.")
             plataforma_destino = st.selectbox("Canal de Destino:", ["Redes Generales (FB / IG / TikTok)", "Chats de Estructura (WhatsApp)", "Prensa y Medios de Comunicación"])
             
-            link_redes_w = f"https://wa.me/?text={urllib.parse.quote(titulo_comunicado + '\n\n' + cuerpo_comunicado)}"
+            texto_completo_redes = titulo_comunicado + "\n\n" + cuerpo_comunicado
+            link_redes_w = f"https://wa.me/?text={urllib.parse.quote(texto_completo_redes)}"
             
             st.markdown(f'<a href="{link_redes_w}" target="_blank" style="display: block; text-align: center; background-color: #25D366; color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">🚀 Disparar Boletín para Redes / Chats</a>', unsafe_allow_html=True)
             st.form_submit_button("💾 Guardar Registro en Historial Digital")
