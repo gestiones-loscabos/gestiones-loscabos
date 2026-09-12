@@ -270,6 +270,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### ☁️ Enlaces a la Nube y Repositorios")
+    st.markdown("[🌐 Conectar con la Nube del Cuarto de Guerra](https://silver-journey-wvgjx59pjp4wc5p4v-8501.app.github.dev/)", unsafe_allow_html=True)
     st.markdown("[📂 Google Drive / Nube Oficial](https://drive.google.com)", unsafe_allow_html=True)
     st.markdown("[🔗 Directorio Cloud Operativo](https://workspace.google.com)", unsafe_allow_html=True)
 
@@ -294,7 +295,7 @@ with st.sidebar:
         celular_destino_hub = st.text_input("Celular Destinatario:", "6240000000")
         
         prefijo_id = link_seleccionado.split(']')[0].replace('[', '')
-        mensaje_hub = f"¡Hola! Te comparto el enlace operativo cloud para: {link_seleccionado}. Ingresa aquí: https://cuartodeguerra-bcs2027.streamlit.app/link_{prefijo_id}"
+        mensaje_hub = f"¡Hola! Te comparto el enlace operativo cloud para: {link_seleccionado}. Ingresa aquí: https://silver-journey-wvgjx59pjp4wc5p4v-8501.app.github.dev/link_{prefijo_id}"
         link_hub_w = f"https://wa.me/52{celular_destino_hub}?text={urllib.parse.quote(mensaje_hub)}"
         st.markdown(f'<a href="{link_hub_w}" target="_blank" style="display: block; text-align: center; background-color: #25D366; color: white; padding: 6px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold;">📲 Enviar Link Cloud por WhatsApp</a>', unsafe_allow_html=True)
 
@@ -434,7 +435,17 @@ if st.session_state.seccion_activa == "TABLERO":
             df_t_mapa = pd.DataFrame(puntos_tablero)
             st.map(df_t_mapa, zoom=10, use_container_width=True)
         else:
-            st.info("Cargando cartografía...")
+            puntos_respaldo = [
+                {"lat": 22.8905, "lon": -109.9167},
+                {"lat": 22.8950, "lon": -109.9200},
+                {"lat": 22.8870, "lon": -109.9120},
+                {"lat": 23.0622, "lon": -109.6950},
+                {"lat": 23.0700, "lon": -109.7000},
+                {"lat": 24.1422, "lon": -110.3127}
+            ]
+            df_t_mapa = pd.DataFrame(puntos_respaldo)
+            st.map(df_t_mapa, zoom=9, use_container_width=True)
+            st.markdown("<div style='text-align: right; font-size: 11px; color: #38bdf8;'>🟢 Cartografía Activa (Modo Cloud / Respaldo)</div>", unsafe_allow_html=True)
 
     col_izq_2, col_der_2 = st.columns(2)
     with col_izq_2:
@@ -479,7 +490,7 @@ if st.session_state.seccion_activa == "TABLERO":
                 secc_asignadas = st.text_input("Seccionales Asignadas (Ej: Secc. 400 a 405):")
                 tarea_brig = st.text_input("Instrucción / Tarea del Día:", "Barrido casa por casa en polígono asignado.")
             
-            link_w_brig = f"https://wa.me/52{cel_brig}?text={urllib.parse.quote(f'¡Hola {nombre_brig}! Tu orden de operación cloud para hoy: {tarea_brig}. Seccionales: {secc_asignadas}. Accede a tu encuesta de campo aquí: https://cuartodeguerra-bcs2027.streamlit.app/tracking-poll')}" if cel_brig else "#"
+            link_w_brig = f"https://wa.me/52{cel_brig}?text={urllib.parse.quote(f'¡Hola {nombre_brig}! Tu orden de operación cloud para hoy: {tarea_brig}. Seccionales: {secc_asignadas}. Accede a tu encuesta de campo aquí: https://silver-journey-wvgjx59pjp4wc5p4v-8501.app.github.dev/tracking-poll')}" if cel_brig else "#"
             
             st.markdown(f'<a href="{link_w_brig}" target="_blank" style="display: block; text-align: center; background-color: #25D366; color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; margin-top: 12px; margin-bottom: 10px;">📲 Enviar Asignación y Link Cloud por WhatsApp</a>', unsafe_allow_html=True)
             st.form_submit_button("💾 Guardar Brigadista en Base Cloud")
