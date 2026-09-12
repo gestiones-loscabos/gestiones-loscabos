@@ -85,6 +85,7 @@ def obtener_conexion():
         except: pass
         return con
     except Exception as e:
+        # Fallback para pruebas offline o entorno aislado
         return None
 
 def abrir_carpeta_pc(ruta):
@@ -162,7 +163,7 @@ if not st.session_state.autenticado:
                 st.session_state.distrito_usuario = user_data[2]
                 st.session_state.rol_usuario = user_data[3] if len(user_data) > 3 and user_data[3] else "GENESIS"
                 st.rerun()
-            elif pin_input == "4521":
+            elif pin_input == "4521": # PIN maestro por defecto de emergencia
                 st.session_state.autenticado = True
                 st.session_state.usuario_actual = "Roberto Hernández"
                 st.session_state.nivel_permiso = "ADMIN"
@@ -435,17 +436,7 @@ if st.session_state.seccion_activa == "TABLERO":
             df_t_mapa = pd.DataFrame(puntos_tablero)
             st.map(df_t_mapa, zoom=10, use_container_width=True)
         else:
-            puntos_respaldo = [
-                {"lat": 22.8905, "lon": -109.9167},
-                {"lat": 22.8950, "lon": -109.9200},
-                {"lat": 22.8870, "lon": -109.9120},
-                {"lat": 23.0622, "lon": -109.6950},
-                {"lat": 23.0700, "lon": -109.7000},
-                {"lat": 24.1422, "lon": -110.3127}
-            ]
-            df_t_mapa = pd.DataFrame(puntos_respaldo)
-            st.map(df_t_mapa, zoom=9, use_container_width=True)
-            st.markdown("<div style='text-align: right; font-size: 11px; color: #38bdf8;'>🟢 Cartografía Activa (Modo Cloud / Respaldo)</div>", unsafe_allow_html=True)
+            st.info("Cargando cartografía...")
 
     col_izq_2, col_der_2 = st.columns(2)
     with col_izq_2:
@@ -749,7 +740,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
     with st.form("form_defensa_voto_territorial"):
         df1, df2, df3 = st.columns(3)
         with df1:
-            nombre_def = st.text_input("Nombre Completo (Defensa del Voto)")
+            nombre_def = text_input("Nombre Completo (Defensa del Voto)")
             personalidad_def = st.selectbox("Personalidad Electoral:", ["RG (Representante General)", "RC (Representante Casilla)", "Observador Electoral"])
         with df2:
             casa_amiga_orig = st.text_input("Casa Amiga de Origen (Ej: CA-01 Roberto H.)")
