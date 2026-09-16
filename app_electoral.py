@@ -8,11 +8,16 @@ import platform
 import re
 from datetime import date, timedelta
 from PIL import Image, ImageEnhance
-import pytesseract
 from streamlit_geolocation import streamlit_geolocation
 
-# --- CONFIGURACIÓN DE RUTA LOCAL WINDOWS PARA TESSERACT ---
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# --- IMPORTACIÓN BLINDADA DE TESSERACT (COMPATIBLE CON NUBE Y LOCAL) ---
+try:
+    import pytesseract
+    if platform.system() == "Windows":
+        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    OCR_DISPONIBLE = True
+except ImportError:
+    OCR_DISPONIBLE = False
 
 # --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO ---
 st.set_page_config(
@@ -723,67 +728,72 @@ elif st.session_state.seccion_activa == "ESCANER_OCR":
             img_original = Image.open(foto_ine_input)
             img_original.save(ruta_imagen_guardada)
             
-            img_gray = img_original.convert('L')
-            enhancer_contrast = ImageEnhance.Contrast(img_gray)
-            img_contrast = enhancer_contrast.enhance(2.5)
-            enhancer_sharpness = ImageEnhance.Sharpness(img_contrast)
-            img_procesada = enhancer_sharpness.enhance(2.0)
-            
-            texto_extraido = pytesseract.image_to_string(img_procesada)
-            lineas_texto = [l.strip() for l in texto_extraido.split('\n') if l.strip()]
-            
-            nombre_extraido = ""
-            domicilio_extraido = ""
-            seccion_extraida = ""
-            
-            for idx, linea in enumerate(lineas_texto):
-                match_etiqueta_secc = re.search(r'(?:SECCIÓN|SECCION|SECC|S[E3]CC[I1]O?N?)\s*[:\-]?\s*(\d{4})', linea.upper())
-                if match_etiqueta_secc:
-                    candidato = match_etiqueta_secc.group(1)
-                    if not candidato.startswith("23"): seccion_extraida = candidato; break
-            
-            if not seccion_extraida:
+            if OCR_DISPONIBLE:
+                img_gray = img_original.convert('L')
+                enhancer_contrast = ImageEnhance.Contrast(img_gray)
+                img_contrast = enhancer_contrast.enhance(2.5)
+                enhancer_sharpness = ImageEnhance.Sharpness(img_contrast)
+                img_procesada = enhancer_sharpness.enhance(2.0)
+                
+                texto_extraido = pytesseract.image_to_string(img_procesada)
+                lineas_texto = [l.strip() for l in texto_extraido.split('\n') if l.strip()]
+                
+                nombre_extraido = ""
+                domicilio_extraido = ""
+                seccion_extraida = ""
+                
                 for idx, linea in enumerate(lineas_texto):
-                    if any(kw in linea.upper() for kw in ["SECC", "SECCION", "SECCIÓN"]):
-                        for offset in range(3):
-                            if idx + offset < len(lineas_texto):
-                                nums = re.findall(r'\b\d{4}\b', lineas_texto[idx + offset])
-                                for n in nums:
-                                    if not n.startswith("23") and n != "2004": seccion_extraida = n; break
-                            if seccion_extraida: break
-                    if seccion_extraida: break
+                    match_etiqueta_secc = re.search(r'(?:SECCIÓN|SECCION|SECC|S[E3]CC[I1]O?N?)\s*[:\-]?\s*(\d{4})', linea.upper())
+                    if match_etiqueta_secc:
+                        candidato = match_etiqueta_secc.group(1)
+                        if not candidato.startswith("23"): seccion_extraida = candidato; break
+                
+                if not seccion_extraida:
+                    for idx, linea in enumerate(lineas_texto):
+                        if any(kw in linea.upper() for kw in ["SECC", "SECCION", "SECCIÓN"]):
+                            for offset in range(3):
+                                if idx + offset < len(lineas_texto):
+                                    nums = re.findall(r'\b\d{4}\b', lineas_texto[idx + offset])
+                                    for n in nums:
+                                        if not n.startswith("23") and n != "2004": seccion_extraida = n; break
+                                if seccion_extraida: break
+                        if seccion_extraida: break
 
-            if not seccion_extraida:
-                for linea in lineas_texto:
-                    nums = re.findall(r'\b\d{4}\b', linea)
-                    for n in nums:
-                        if not n.startswith("23") and n != "2004": seccion_extraida = n; break
-                    if seccion_extraida: break
+                if not seccion_extraida:
+                    for linea in lineas_texto:
+                        nums = re.findall(r'\b\d{4}\b', linea)
+                        for n in nums:
+                            if not n.startswith("23") and n != "2004": seccion_extraida = n; break
+                        if seccion_extraida: break
 
-            for idx, linea in enumerate(lineas_texto):
-                if "NOMBRE" in linea.upper():
-                    bloque_nombre = []
-                    for j in range(idx + 1, min(idx + 4, len(lineas_texto))):
-                        if any(palabra in lineas_texto[j].upper() for palabra in ["DOMICILIO", "CLAVE", "CURP", "ESTADO"]): break
-                        linea_limpia = re.sub(r'^[^A-ZÁÉÍÓÚÑ]+', '', lineas_texto[j]).strip()
-                        if len(linea_limpia) > 2: bloque_nombre.append(linea_limpia)
-                    if bloque_nombre: nombre_extraido = " ".join(bloque_nombre)
+                for idx, linea in enumerate(lineas_texto):
+                    if "NOMBRE" in linea.upper():
+                        bloque_nombre = []
+                        for j in range(idx + 1, min(idx + 4, len(lineas_texto))):
+                            if any(palabra in lineas_texto[j].upper() for palabra in ["DOMICILIO", "CLAVE", "CURP", "ESTADO"]): break
+                            linea_limpia = re.sub(r'^[^A-ZÁÉÍÓÚÑ]+', '', lineas_texto[j]).strip()
+                            if len(linea_limpia) > 2: bloque_nombre.append(linea_limpia)
+                        if bloque_nombre: nombre_extraido = " ".join(bloque_nombre)
 
-            for idx, linea in enumerate(lineas_texto):
-                if "DOMICILIO" in linea.upper():
-                    bloque_dir = []
-                    for j in range(idx + 1, min(idx + 4, len(lineas_texto))):
-                        if any(palabra in lineas_texto[j].upper() for palabra in ["CLAVE", "CURP", "REGISTRO", "SEXO", "ANIO"]): break
-                        linea_limpia_dir = re.sub(r'^[^A-ZÁÉÍÓÚÑ0-9]+', '', lineas_texto[j]).strip()
-                        if len(linea_limpia_dir) > 2: bloque_dir.append(linea_limpia_dir)
-                    if bloque_dir: domicilio_extraido = " , ".join(bloque_dir)
+                for idx, linea in enumerate(lineas_texto):
+                    if "DOMICILIO" in linea.upper():
+                        bloque_dir = []
+                        for j in range(idx + 1, min(idx + 4, len(lineas_texto))):
+                            if any(palabra in lineas_texto[j].upper() for palabra in ["CLAVE", "CURP", "REGISTRO", "SEXO", "ANIO"]): break
+                            linea_limpia_dir = re.sub(r'^[^A-ZÁÉÍÓÚÑ0-9]+', '', lineas_texto[j]).strip()
+                            if len(linea_limpia_dir) > 2: bloque_dir.append(linea_limpia_dir)
+                        if bloque_dir: domicilio_extraido = " , ".join(bloque_dir)
+            else:
+                nombre_extraido = ""
+                seccion_extraida = ""
+                domicilio_extraido = ""
 
             st.session_state.ocr_nombre_capturado = nombre_extraido
             st.session_state.ocr_seccion_capturada = seccion_extraida
             st.session_state.ocr_domicilio_capturado = domicilio_extraido
             st.session_state.ocr_imagen_path = ruta_imagen_guardada
 
-            st.success("✅ ¡Credencial leída con éxito! Redirigiendo al formulario...")
+            st.success("✅ ¡Credencial capturada con éxito! Redirigiendo al formulario...")
             st.session_state.seccion_activa = "TERRITORIAL"
             st.rerun()
 
@@ -898,8 +908,6 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
         for idx, tab in enumerate(tabs_obj, start=1):
             with tab:
                 st.markdown(f"#### 📸 Captura INE Coanfitrión C{idx}")
-                
-                # Botón de escáner aislado específico para Coanfitriones
                 if st.button(f"📸 Abrir Escáner INE (Coanfitrión C{idx})", use_container_width=True, key=f"btn_esc_c{idx}"):
                     st.session_state.seccion_activa = "ESCANER_OCR"
                     st.rerun()
