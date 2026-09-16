@@ -27,7 +27,7 @@ except ImportError:
 
 # --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO ---
 st.set_page_config(
-    page_title="Cuarto de Guerra Digital - Baja California Sur",
+    page_title="Cuarto de Guerra Digital nube - Baja California Sur",
     layout="wide",
     initial_sidebar_state="expanded"
 )
