@@ -8,7 +8,6 @@ import platform
 import re
 from datetime import date, timedelta
 from PIL import Image, ImageEnhance
-from streamlit_geolocation import streamlit_geolocation
 
 # --- IMPORTACIÓN BLINDADA DE TESSERACT (COMPATIBLE CON NUBE Y LOCAL) ---
 try:
@@ -18,6 +17,13 @@ try:
     OCR_DISPONIBLE = True
 except ImportError:
     OCR_DISPONIBLE = False
+
+# --- IMPORTACIÓN BLINDADA DE GEOLOCALIZACIÓN ---
+try:
+    from streamlit_geolocation import streamlit_geolocation
+    GEOLOC_DISPONIBLE = True
+except ImportError:
+    GEOLOC_DISPONIBLE = False
 
 # --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO ---
 st.set_page_config(
