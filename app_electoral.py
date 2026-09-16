@@ -25,54 +25,86 @@ try:
 except ImportError:
     GEOLOC_DISPONIBLE = False
 
-# --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO ---
+# --- CONFIGURACIÓN DE PÁGINA Y ESTILO TÁCTICO OSCURO DE ALTO CONTRASTE ---
 st.set_page_config(
-    page_title="Cuarto de Guerra Digital nube - Baja California Sur",
+    page_title="Cuarto de Guerra Digital - Nube BCS",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 st.markdown("""
 <style>
-    .stApp { background-color: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    /* Fondo general de la aplicación */
+    .stApp { background-color: #07090e; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
     
-    label, .stTextInput label, .stSelectbox label, .stRadio label { color: #38bdf8 !important; font-weight: bold !important; font-size: 14px !important; }
-    p, span, div { color: #f1f5f9; }
-    input { color: #ffffff !important; background-color: #1f2937 !important; }
+    /* Forzar alto contraste en etiquetas de texto y selectores */
+    label, .stTextInput label, .stSelectbox label, .stRadio label, .stDateInput label { 
+        color: #38bdf8 !important; 
+        font-weight: bold !important; 
+        font-size: 15px !important; 
+    }
+    
+    /* Textos generales y subtítulos más claros */
+    p, span, div, h3, h4, h5 { color: #f8fafc !important; }
+    
+    /* Cajas de texto y inputs con fondo oscuro y letra blanca nítida */
+    input, textarea { 
+        color: #ffffff !important; 
+        background-color: #111827 !important; 
+        border: 1px solid #38bdf8 !important;
+    }
 
+    /* Botones tácticos principales */
     div.stButton > button:first-child { 
-        background: linear-gradient(135deg, #0b2d54 0%, #1e3a8a 100%); 
-        color: white; 
+        background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%); 
+        color: #ffffff !important; 
         border-radius: 8px; 
         font-weight: bold; 
         font-size: 15px;
         border: 1px solid #38bdf8;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     }
-    div.stButton > button:first-child:hover { background: linear-gradient(135deg, #15457a 0%, #2563eb 100%); border-color: #38bdf8; }
+    div.stButton > button:first-child:hover { 
+        background: linear-gradient(135deg, #0369a1 0%, #1e40af 100%); 
+        border-color: #7dd3fc; 
+    }
     
+    /* Contenedores de bloques */
     .caja-bloque { 
-        background-color: #111827; 
+        background-color: #0f172a; 
         border-left: 5px solid #38bdf8; 
-        padding: 12px 16px; 
+        padding: 14px 18px; 
         margin-top: 10px; 
         margin-bottom: 10px; 
         border-radius: 8px; 
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        border-top: 1px solid #1e293b;
+        border-right: 1px solid #1e293b;
+        border-bottom: 1px solid #1e293b;
     }
-    .titulo-caja { color: #38bdf8; font-weight: bold; font-size: 1.15rem; margin-bottom: 6px; letter-spacing: 0.3px; }
+    .titulo-caja { color: #38bdf8; font-weight: bold; font-size: 1.2rem; margin-bottom: 6px; letter-spacing: 0.3px; }
     
+    /* Cajas estadísticas */
     .stat-box { 
-        background-color: #111827; 
+        background-color: #0f172a; 
         padding: 16px; 
         border-radius: 10px; 
         text-align: center; 
-        border: 1px solid #1f2937; 
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        border: 1px solid #334155; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
     .stat-num { font-size: 24px; font-weight: bold; color: #38bdf8; margin-top: 6px; }
-    .stat-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+    .stat-label { font-size: 12px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
     
+    /* Estilo corregido para la barra lateral (Sidebar) de alto contraste */
+    [data-testid="stSidebar"] {
+        background-color: #090d16 !important;
+        border-right: 1px solid #1e293b;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
+        color: #f1f5f9 !important;
+    }
+
     .mobile-simulator {
         background-color: #0f172a;
         border: 14px solid #1e293b;
@@ -82,9 +114,9 @@ st.markdown("""
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
     }
     
-    .arbol-nodo { background-color: #1e293b; border-left: 3px solid #10b981; padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 13px; }
-    .arbol-subnodo { background-color: #0f172a; border-left: 3px solid #3b82f6; padding: 8px; margin-left: 20px; margin-bottom: 5px; border-radius: 4px; font-size: 12px; }
-    .arbol-simp { background-color: #0b0f19; border-left: 3px solid #6366f1; padding: 6px; margin-left: 40px; margin-bottom: 4px; border-radius: 4px; font-size: 11px; }
+    .arbol-nodo { background-color: #1e293b; border-left: 3px solid #10b981; padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 13px; color: #fff; }
+    .arbol-subnodo { background-color: #0f172a; border-left: 3px solid #3b82f6; padding: 8px; margin-left: 20px; margin-bottom: 5px; border-radius: 4px; font-size: 12px; color: #fff; }
+    .arbol-simp { background-color: #07090e; border-left: 3px solid #6366f1; padding: 6px; margin-left: 40px; margin-bottom: 4px; border-radius: 4px; font-size: 11px; color: #cbd5e1; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -244,8 +276,8 @@ if "nivel_permiso" not in st.session_state: st.session_state.nivel_permiso = Non
 if "rol_usuario" not in st.session_state: st.session_state.rol_usuario = None
 
 if not st.session_state.autenticado:
-    st.markdown("<br><br><h1 style='text-align: center; color: #38bdf8; font-size: 2.8rem;'>🛡️ Cuarto de Guerra Digital (Host Local)</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #9ca3af; font-size: 1.1rem;'>Plataforma Electoral Táctica - Baja California Sur</p>", unsafe_allow_html=True)
+    st.markdown("<br><br><h1 style='text-align: center; color: #38bdf8; font-size: 2.8rem;'>🛡️ Cuarto de Guerra Digital - Nube BCS</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 1.1rem;'>Plataforma Electoral Táctica - Versión Servidor Remoto</p>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1, 1])
     with c2:
@@ -418,12 +450,12 @@ with st.sidebar:
 # ==========================================
 col_titulo, col_logo = st.columns([3, 1])
 with col_titulo:
-    st.markdown("<h1 style='color: #38bdf8; margin-top: 5px; font-size: 1.8rem;'>🚀 Cuarto de Guerra Digital: Panel Central (Host)</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #38bdf8; margin-top: 5px; font-size: 1.8rem;'>🚀 Cuarto de Guerra Digital - Versión Nube (BCS)</h1>", unsafe_allow_html=True)
 with col_logo:
     if "logo_actual" in st.session_state and st.session_state.logo_actual is not None:
         st.image(st.session_state.logo_actual, width=90)
     else:
-        st.markdown("<div style='text-align: right; color: #9ca3af; font-size: 10px; padding-top: 10px;'>[ Sin logotipo cargado ]</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: right; color: #cbd5e1; font-size: 10px; padding-top: 10px;'>[ Sin logotipo cargado ]</div>", unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -503,7 +535,7 @@ if st.session_state.seccion_activa == "TABLERO":
         
         vm_1, vm_2 = st.columns(2)
         with vm_1:
-            st.markdown(f"<div class='stat-box'><div class='stat-label'>🗳️ Votos / Contabilidad</div><div class='stat-num'>{votos_proyectados}</div><div style='font-size: 10px; color: #9ca3af;'>Meta: 14,204</div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='stat-box'><div class='stat-label'>🗳️ Votos / Contabilidad</div><div class='stat-num'>{votos_proyectados}</div><div style='font-size: 10px; color: #cbd5e1;'>Meta: 14,204</div></div>", unsafe_allow_html=True)
         with vm_2:
             st.markdown(f"<div class='stat-box'><div class='stat-label'>🏠 Meta Casas (M/CA)</div><div class='stat-num'>{total_casas} / {meta_casas_objetivo}</div><div style='font-size: 10px; color: #38bdf8;'>{round((total_casas/meta_casas_objetivo)*100, 1) if meta_casas_objetivo > 0 else 0}% Células</div></div>", unsafe_allow_html=True)
 
@@ -515,7 +547,7 @@ if st.session_state.seccion_activa == "TABLERO":
         for idx_c, casa in enumerate(casas_cumplidas):
             col_c_info, col_c_btn = st.columns([2, 1])
             with col_c_info:
-                st.markdown(f"<div style='font-size: 13px; font-weight: bold; color: #38bdf8;'>{casa['nombre']}</div><div style='font-size: 11px; color: #9ca3af;'>Resp: {casa['responsable']} (1x5x5x2)</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-size: 13px; font-weight: bold; color: #38bdf8;'>{casa['nombre']}</div><div style='font-size: 11px; color: #cbd5e1;'>Resp: {casa['responsable']} (1x5x5x2)</div>", unsafe_allow_html=True)
             with col_c_btn:
                 msg_felicitacion = f"¡Muchas felicidades {casa['responsable']}! Gran trabajo al cumplir con la meta en {casa['nombre']}."
                 link_w = f"https://wa.me/52{casa['tel']}?text={urllib.parse.quote(msg_felicitacion)}"
@@ -583,7 +615,7 @@ if st.session_state.seccion_activa == "TABLERO":
             abrir_carpeta_pc(r"C:\Users\Usuario\Desktop\Plataforma_Electoral\ENCUESTAS")
 
     if st.session_state.ver_modal_brigadistas:
-        st.markdown("<div style='background-color:#111827; padding:18px; border-radius:10px; border:1px solid #38bdf8; margin-top:12px;'>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color:#0f172a; padding:18px; border-radius:10px; border:1px solid #38bdf8; margin-top:12px;'>", unsafe_allow_html=True)
         st.markdown("##### ➕ Alta, Registro y Asignación de Tareas a Brigadistas")
         with st.form("form_alta_brigadista_desplegable"):
             fb1, fb2 = st.columns(2)
@@ -892,7 +924,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
             if st.session_state.ocr_imagen_path and os.path.exists(st.session_state.ocr_imagen_path):
                 st.image(st.session_state.ocr_imagen_path, use_container_width=True)
             else:
-                st.markdown("<div style='border: 2px dashed #374155; padding: 40px; text-align: center; color: #9ca3af; border-radius: 8px;'>Sin credencial escaneada</div>", unsafe_allow_html=True)
+                st.markdown("<div style='border: 2px dashed #334155; padding: 40px; text-align: center; color: #cbd5e1; border-radius: 8px;'>Sin credencial escaneada</div>", unsafe_allow_html=True)
 
         if st.button("💾 Guardar Anfitrión Principal en Base de Datos", use_container_width=True, key="btn_save_anfitrion"):
             if nombre_ca and celular_ca:
@@ -937,7 +969,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
                     if st.session_state.ocr_imagen_path and os.path.exists(st.session_state.ocr_imagen_path) and idx == 1:
                         st.image(st.session_state.ocr_imagen_path, use_container_width=True)
                     else:
-                        st.markdown("<div style='border: 2px dashed #374155; padding: 30px; text-align: center; color: #9ca3af; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='border: 2px dashed #334155; padding: 30px; text-align: center; color: #cbd5e1; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
 
                 if st.button(f"💾 Guardar Coanfitrión C{idx}", use_container_width=True, key=f"save_c{idx}"):
                     if nom_cx and cel_cx and id_padre_cx:
@@ -979,7 +1011,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
                     if st.session_state.ocr_imagen_path and os.path.exists(st.session_state.ocr_imagen_path) and idx_s == 1:
                         st.image(st.session_state.ocr_imagen_path, use_container_width=True)
                     else:
-                        st.markdown("<div style='border: 2px dashed #374155; padding: 30px; text-align: center; color: #9ca3af; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='border: 2px dashed #334155; padding: 30px; text-align: center; color: #cbd5e1; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
 
                 if st.button(f"➕ Guardar Simpatizante C{idx_s} y Enlazar", key=f"save_simp_c{idx_s}"):
                     if nom_s and cel_s and id_ca_s:
@@ -1016,7 +1048,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
             if st.session_state.ocr_imagen_path and os.path.exists(st.session_state.ocr_imagen_path):
                 st.image(st.session_state.ocr_imagen_path, use_container_width=True)
             else:
-                st.markdown("<div style='border: 2px dashed #374155; padding: 30px; text-align: center; color: #9ca3af; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
+                st.markdown("<div style='border: 2px dashed #334155; padding: 30px; text-align: center; color: #cbd5e1; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
 
         if st.button("💾 Guardar Representante / Observador", key="btn_save_def"):
             rol_mapped = "RG" if "RG" in personalidad_def else "RC" if "RC" in personalidad_def else "Observador Electoral"
@@ -1054,7 +1086,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
             if st.session_state.ocr_imagen_path and os.path.exists(st.session_state.ocr_imagen_path):
                 st.image(st.session_state.ocr_imagen_path, use_container_width=True)
             else:
-                st.markdown("<div style='border: 2px dashed #374155; padding: 30px; text-align: center; color: #9ca3af; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
+                st.markdown("<div style='border: 2px dashed #334155; padding: 30px; text-align: center; color: #cbd5e1; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
 
         if st.button("💾 Guardar Simpatizante Común", key="btn_save_scom"):
             if nombre_scom and cel_scom: 
@@ -1093,7 +1125,7 @@ elif st.session_state.seccion_activa == "TERRITORIAL":
             if st.session_state.ocr_imagen_path and os.path.exists(st.session_state.ocr_imagen_path):
                 st.image(st.session_state.ocr_imagen_path, use_container_width=True)
             else:
-                st.markdown("<div style='border: 2px dashed #374155; padding: 30px; text-align: center; color: #9ca3af; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
+                st.markdown("<div style='border: 2px dashed #334155; padding: 30px; text-align: center; color: #cbd5e1; border-radius: 8px; font-size:11px;'>Sin escaneo activo</div>", unsafe_allow_html=True)
 
         if st.button("💾 Guardar Casa Amiga Espejo y Activar Red", key="btn_save_esp"):
             if nombre_anf_esp and cel_esp:
@@ -1152,7 +1184,7 @@ elif st.session_state.seccion_activa == "EVENTO":
     st.markdown("<div class='caja-bloque'><div class='titulo-caja'>📊 Estadística de Confirmación y Control de Asistencia por Casa Amiga</div></div>", unsafe_allow_html=True)
     col_est1, col_est2, col_est3 = st.columns(3)
     with col_est1: st.markdown("<div class='stat-box'><div class='stat-label'>🎯 Meta Proyectada</div><div class='stat-num'>3,500 Asistentes</div></div>", unsafe_allow_html=True)
-    with col_est2: st.markdown("<div class='stat-box'><div class='stat-label'>✅ Total Confirmados</div><div class='stat-num' style='color: #25D366;'>2,840 Asistentes</div><div style='font-size: 9px; color: #9ca3af;'>81% de la Meta</div></div>", unsafe_allow_html=True)
+    with col_est2: st.markdown("<div class='stat-box'><div class='stat-label'>✅ Total Confirmados</div><div class='stat-num' style='color: #25D366;'>2,840 Asistentes</div><div style='font-size: 9px; color: #cbd5e1;'>81% de la Meta</div></div>", unsafe_allow_html=True)
     with col_est3: st.markdown("<div class='stat-box'><div class='stat-label'>🏠 Casas Amigas Confirmando</div><div class='stat-num' style='color: #38bdf8;'>28 / 36 Activas</div></div>", unsafe_allow_html=True)
 
     st.markdown("##### 📋 Listado de Confirmaciones por Célula Territorial")
@@ -1191,7 +1223,7 @@ elif st.session_state.seccion_activa == "DIA_D":
         data_defensa_dd = [{"Nombre": "Carlos Mendoza", "Rol": "RG", "Casa Amiga": "CA-01", "Teléfono": "6241112233", "Casilla": "Secc. 400"}]
         for def_row in data_defensa_dd:
             cols_def = st.columns([3, 2, 2, 2])
-            with cols_def[0]: st.markdown(f"**{def_row['Nombre']}** ({def_row['Rol']})<br><span style='font-size:11px; color:#9ca3af;'>Cel: {def_row['Teléfono']}</span>", unsafe_allow_html=True)
+            with cols_def[0]: st.markdown(f"**{def_row['Nombre']}** ({def_row['Rol']})<br><span style='font-size:11px; color:#cbd5e1;'>Cel: {def_row['Teléfono']}</span>", unsafe_allow_html=True)
             with cols_def[1]: st.markdown(f"<span style='font-size:12px;'>CA: {def_row['Casa Amiga']}</span>", unsafe_allow_html=True)
             with cols_def[2]: st.markdown(f'<a href="tel:{def_row["Teléfono"]}" target="_self" style="display: block; text-align: center; background-color: #0b2d54; color: white; padding: 4px; border-radius: 4px; text-decoration: none; font-size:11px; font-weight: bold;">📞 Llamar</a>', unsafe_allow_html=True)
             with cols_def[3]:
@@ -1218,7 +1250,7 @@ elif st.session_state.seccion_activa == "DIA_D":
     with tab_dd4:
         col_pan1, col_pan2 = st.columns(2)
         with col_pan1:
-            st.markdown("<div class='stat-box' style='background-color: #111827; border-color: #3730a3;'><div class='stat-label'>🖨️ Formatos Oficiales INE</div>", unsafe_allow_html=True)
+            st.markdown("<div class='stat-box' style='background-color: #0f172a; border-color: #3730a3;'><div class='stat-label'>🖨️ Formatos Oficiales INE</div>", unsafe_allow_html=True)
             if st.button("📂 Abrir Carpeta de Actas en PC", use_container_width=True, key="btn_actas_pc"): abrir_carpeta_pc(r"C:\Users\Usuario\Desktop\Plataforma_Electoral\ACTAS_INCIDENCIA")
             st.markdown("</div>", unsafe_allow_html=True)
         with col_pan2:
@@ -1320,12 +1352,12 @@ elif st.session_state.seccion_activa == "AGENDA":
         with col_k1:
             f_ini_proc = st.date_input("🏁 Inicio del Proceso Electoral:", value=st.session_state.fecha_inicio_proceso_sel, key="in_proc_final_v4")
             st.session_state.fecha_inicio_proceso_sel = f_ini_proc
-            st.markdown(f"<div style='background-color: #111827; padding: 6px; border-radius: 6px; border: 1px solid #3b82f6; text-align: center; color: #38bdf8; font-weight: bold; font-size: 13px;'>📅 {formatear_fecha_espanol(f_ini_proc)}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background-color: #0f172a; padding: 6px; border-radius: 6px; border: 1px solid #3b82f6; text-align: center; color: #38bdf8; font-weight: bold; font-size: 13px;'>📅 {formatear_fecha_espanol(f_ini_proc)}</div>", unsafe_allow_html=True)
             
         with col_k2:
             f_elec = st.date_input("🎯 Día de la Votación (Día D):", value=st.session_state.fecha_eleccion_sel, key="in_elec_final_v4")
             st.session_state.fecha_eleccion_sel = f_elec
-            st.markdown(f"<div style='background-color: #111827; padding: 6px; border-radius: 6px; border: 1px solid #dc2626; text-align: center; color: #dc2626; font-weight: bold; font-size: 13px;'>🎯 {formatear_fecha_espanol(f_elec)}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background-color: #0f172a; padding: 6px; border-radius: 6px; border: 1px solid #dc2626; text-align: center; color: #dc2626; font-weight: bold; font-size: 13px;'>🎯 {formatear_fecha_espanol(f_elec)}</div>", unsafe_allow_html=True)
 
         st.markdown("---")
         st.markdown("#### ⚙️ Definición de Fases Oficiales (Fuente de Verdad)")
